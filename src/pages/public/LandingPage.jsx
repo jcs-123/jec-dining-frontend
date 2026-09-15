@@ -34,7 +34,10 @@ import {
   Users,
   Moon,
   FileText,
-  Menu as MenuIcon
+  Menu as MenuIcon,
+  Eye,
+  EyeOff,
+  KeyRound
 } from 'lucide-react';
 
 // Dedicated Vector Logo Component for JEC Dining (Header / Top Bar)
@@ -165,12 +168,26 @@ export const LandingPage = () => {
 
   // Modal state
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSent, setForgotSent] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [targetCafeAfterLogin, setTargetCafeAfterLogin] = useState('jeccafe');
   const [loginEmail, setLoginEmail] = useState('customer@jec.ac.in');
   const [loginPassword, setLoginPassword] = useState('Customer@2026');
   const [authLoading, setAuthLoading] = useState(false);
   const [footerPolicyModal, setFooterPolicyModal] = useState(null); // 'privacy' | 'terms' | 'contact' | 'support'
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleForgotSubmit = (e) => {
+    if (e) e.preventDefault();
+    if (!forgotEmail) {
+      showError('Please enter your registered campus email address.');
+      return;
+    }
+    setForgotSent(true);
+    showSuccess(`Password reset instructions sent to ${forgotEmail}`);
+  };
 
   // IntersectionObserver for scroll animations
   const sectionRefs = useRef([]);
@@ -432,20 +449,28 @@ export const LandingPage = () => {
           }
         }
 
-        /* Features Section 8-Card Grid (Extra Compact & Sleek) */
-        .features-grid-8 {
+        /* Features Section 2 Rows with Alternating Scroll Animation */
+        .features-rows-container {
+          display: flex;
+          flex-direction: column;
+          gap: 1.15rem;
+          width: 100%;
+          position: relative;
+        }
+        .features-row {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          gap: 0.9rem;
+          gap: 0.95rem;
+          width: 100%;
         }
         @media (max-width: 1100px) {
-          .features-grid-8 {
+          .features-row {
             grid-template-columns: repeat(2, 1fr);
             gap: 0.85rem;
           }
         }
         @media (max-width: 600px) {
-          .features-grid-8 {
+          .features-row {
             grid-template-columns: 1fr;
             gap: 0.8rem;
           }
@@ -455,7 +480,7 @@ export const LandingPage = () => {
           background: #FFFCF7;
           border: 1.5px solid #EFE6DC;
           border-radius: 16px;
-          padding: 1.1rem 1.05rem 0.95rem;
+          padding: 1.15rem 1.1rem 1rem;
           box-shadow: 0 4px 14px rgba(50, 30, 15, 0.03);
           position: relative;
           display: flex;
@@ -465,8 +490,8 @@ export const LandingPage = () => {
           cursor: pointer;
         }
         .feature-card-item:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 12px 24px rgba(138, 88, 56, 0.1);
+          transform: translateY(-4px);
+          box-shadow: 0 14px 28px rgba(138, 88, 56, 0.12);
           border-color: #DFC8B2;
           background: #FFFFFF;
         }
@@ -521,16 +546,83 @@ export const LandingPage = () => {
           transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* Staggered Scroll Animation for Feature Cards */
-        .features-scroll-card {
+        /* 1st Row: Slides in from the RIGHT on scroll */
+        .features-row-right .feature-card-item {
           opacity: 0;
-          transform: translateY(24px);
-          transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+          transform: translateX(85px);
+          transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+          will-change: transform, opacity;
         }
-        .is-revealed .features-scroll-card,
-        .landing-section.is-revealed .features-scroll-card {
+
+        /* 2nd Row: Slides in from the LEFT on scroll */
+        .features-row-left .feature-card-item {
+          opacity: 0;
+          transform: translateX(-85px);
+          transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+          will-change: transform, opacity;
+        }
+
+        /* When revealed via scroll observer */
+        .is-revealed .features-row-right .feature-card-item,
+        .landing-section.is-revealed .features-row-right .feature-card-item {
           opacity: 1;
-          transform: translateY(0);
+          transform: translateX(0);
+        }
+
+        .is-revealed .features-row-left .feature-card-item,
+        .landing-section.is-revealed .features-row-left .feature-card-item {
+          opacity: 1;
+          transform: translateX(0);
+        }
+
+        /* Staggered transition delays for Row 1 (from right) */
+        .features-row-right .feature-card-item:nth-child(1) { transition-delay: 0.06s; }
+        .features-row-right .feature-card-item:nth-child(2) { transition-delay: 0.16s; }
+        .features-row-right .feature-card-item:nth-child(3) { transition-delay: 0.26s; }
+        .features-row-right .feature-card-item:nth-child(4) { transition-delay: 0.36s; }
+
+        /* Staggered transition delays for Row 2 (from left) */
+        .features-row-left .feature-card-item:nth-child(1) { transition-delay: 0.12s; }
+        .features-row-left .feature-card-item:nth-child(2) { transition-delay: 0.22s; }
+        .features-row-left .feature-card-item:nth-child(3) { transition-delay: 0.32s; }
+        .features-row-left .feature-card-item:nth-child(4) { transition-delay: 0.42s; }
+
+        /* Trust Badges Scroll Animation (Slide from Right) */
+        .trust-badge-item {
+          opacity: 0;
+          transform: translateX(75px);
+          transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+          will-change: transform, opacity;
+        }
+        .is-revealed .trust-badge-item,
+        .landing-section.is-revealed .trust-badge-item {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        .stats-grid .trust-badge-item:nth-child(1) { transition-delay: 0.08s; }
+        .stats-grid .trust-badge-item:nth-child(2) { transition-delay: 0.18s; }
+        .stats-grid .trust-badge-item:nth-child(3) { transition-delay: 0.28s; }
+        .stats-grid .trust-badge-item:nth-child(4) { transition-delay: 0.38s; }
+
+        /* Our Cafes 2-Card Smooth Scroll Animations */
+        .cafe-card-left {
+          opacity: 0;
+          transform: translateX(-65px) scale(0.98);
+          transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+          will-change: transform, opacity;
+        }
+        .cafe-card-right {
+          opacity: 0;
+          transform: translateX(65px) scale(0.98);
+          transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.14s, transform 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.14s;
+          will-change: transform, opacity;
+        }
+        .is-revealed .cafe-card-left,
+        .landing-section.is-revealed .cafe-card-left,
+        .is-revealed .cafe-card-right,
+        .landing-section.is-revealed .cafe-card-right {
+          opacity: 1;
+          transform: translateX(0) scale(1);
         }
 
         /* Cafes 2-Card Grid (Exact User Mockup) */
@@ -1696,131 +1788,198 @@ export const LandingPage = () => {
           </div>
         </div>
 
-        {/* 8 Feature Cards Matching User Reference Mockup */}
-        <div className="features-grid-8">
-          {[
-            {
-              num: '01',
-              IconComponent: Store,
-              title: 'Choose Your Café',
-              desc: 'Order from JEC Cafe or JEC Bytes',
-              action: () => {
-                const el = document.getElementById('our-cafes-section');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-              }
-            },
-            {
-              num: '02',
-              IconComponent: UtensilsCrossed,
-              title: 'Browse Combos',
-              desc: 'Explore curated meals and combo deals',
-              action: () => handleCafeSelection('jeccafe')
-            },
-            {
-              num: '03',
-              IconComponent: CreditCard,
-              title: 'Easy Payment',
-              desc: 'Pay quickly with secure payment options',
-              action: () => handleCafeSelection('jeccafe')
-            },
-            {
-              num: '04',
-              IconComponent: FileText,
-              title: 'Instant Receipt',
-              desc: 'Get your digital receipt immediately after payment',
-              action: () => navigate(isAuthenticated ? '/my-orders' : '/login')
-            },
-            {
-              num: '05',
-              IconComponent: Truck,
-              title: 'Order Tracking',
-              desc: 'Track your order status in real time',
-              action: () => navigate(isAuthenticated ? '/my-orders' : '/login')
-            },
-            {
-              num: '06',
-              IconComponent: Clock,
-              title: 'Past Orders',
-              desc: 'View order history and previous receipts anytime',
-              action: () => navigate(isAuthenticated ? '/my-orders' : '/login')
-            },
-            {
-              num: '07',
-              IconComponent: Coffee,
-              title: 'Fast Pickup',
-              desc: 'Quick and convenient campus pickup',
-              action: () => handleCafeSelection('jeccafe')
-            },
-            {
-              num: '08',
-              IconComponent: ShieldCheck,
-              title: 'Secure Login',
-              desc: 'Your data and orders stay safe with us',
-              action: () => setShowLoginModal(true)
-            },
-          ].map((item, i) => {
-            const CardIcon = item.IconComponent;
-            return (
-              <div
-                key={i}
-                className="feature-card-item features-scroll-card"
-                style={{ transitionDelay: `${0.06 * (i + 1)}s` }}
-                onClick={item.action}
-              >
-                {/* Number on top-right */}
-                <div style={{
-                  position: 'absolute',
-                  top: '0.65rem',
-                  right: '0.75rem',
-                  fontSize: '0.7rem',
-                  fontWeight: 700,
-                  color: '#A89F93',
-                  letterSpacing: '0.04em'
-                }}>
-                  {item.num}
-                </div>
+        {/* 8 Feature Cards: Row 1 from Right, Row 2 from Left on Scroll */}
+        <div className="features-rows-container">
+          {/* Row 1: Cards 01 to 04 (Animates from RIGHT) */}
+          <div className="features-row features-row-right">
+            {[
+              {
+                num: '01',
+                IconComponent: Store,
+                title: 'Choose Your Café',
+                desc: 'Order from JEC Cafe or JEC Bytes',
+                action: () => {
+                  const el = document.getElementById('our-cafes-section');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }
+              },
+              {
+                num: '02',
+                IconComponent: UtensilsCrossed,
+                title: 'Browse Combos',
+                desc: 'Explore curated meals and combo deals',
+                action: () => handleCafeSelection('jeccafe')
+              },
+              {
+                num: '03',
+                IconComponent: CreditCard,
+                title: 'Easy Payment',
+                desc: 'Pay quickly with secure payment options',
+                action: () => handleCafeSelection('jeccafe')
+              },
+              {
+                num: '04',
+                IconComponent: FileText,
+                title: 'Instant Receipt',
+                desc: 'Get your digital receipt immediately after payment',
+                action: () => navigate(isAuthenticated ? '/my-orders' : '/login')
+              },
+            ].map((item, i) => {
+              const CardIcon = item.IconComponent;
+              return (
+                <div
+                  key={i}
+                  className="feature-card-item"
+                  onClick={item.action}
+                >
+                  {/* Number on top-right */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '0.65rem',
+                    right: '0.75rem',
+                    fontSize: '0.7rem',
+                    fontWeight: 700,
+                    color: '#A89F93',
+                    letterSpacing: '0.04em'
+                  }}>
+                    {item.num}
+                  </div>
 
-                {/* Glowing Sunburst Halo Icon Disk */}
-                <div className="feature-icon-halo">
-                  {/* Subtle Sparkle Accents */}
-                  <Sparkles size={7} color="#D59B58" style={{ position: 'absolute', top: '5px', left: '5px', opacity: 0.8 }} />
-                  <Sparkles size={8} color="#D59B58" style={{ position: 'absolute', bottom: '6px', right: '5px', opacity: 0.85 }} />
+                  {/* Glowing Sunburst Halo Icon Disk */}
+                  <div className="feature-icon-halo">
+                    <Sparkles size={7} color="#D59B58" style={{ position: 'absolute', top: '5px', left: '5px', opacity: 0.8 }} />
+                    <Sparkles size={8} color="#D59B58" style={{ position: 'absolute', bottom: '6px', right: '5px', opacity: 0.85 }} />
 
-                  <div className="feature-icon-disk">
-                    <CardIcon size={17} strokeWidth={2} />
+                    <div className="feature-icon-disk">
+                      <CardIcon size={17} strokeWidth={2} />
+                    </div>
+                  </div>
+
+                  {/* Title */}
+                  <h3 style={{
+                    fontFamily: "'Fraunces', Georgia, serif",
+                    fontSize: '0.96rem',
+                    fontWeight: 800,
+                    color: '#1A1816',
+                    margin: '0 0 0.25rem',
+                    letterSpacing: '-0.015em'
+                  }}>
+                    {item.title}
+                  </h3>
+
+                  {/* Description */}
+                  <p style={{
+                    fontSize: '0.76rem',
+                    color: '#6B6258',
+                    lineHeight: 1.4,
+                    margin: '0 0 0.65rem',
+                    flex: 1
+                  }}>
+                    {item.desc}
+                  </p>
+
+                  {/* Bottom-right Arrow Button */}
+                  <div className="feature-arrow-btn">
+                    <ArrowRight size={11} strokeWidth={2.4} />
                   </div>
                 </div>
+              );
+            })}
+          </div>
 
-                {/* Title */}
-                <h3 style={{
-                  fontFamily: "'Fraunces', Georgia, serif",
-                  fontSize: '0.96rem',
-                  fontWeight: 800,
-                  color: '#1A1816',
-                  margin: '0 0 0.25rem',
-                  letterSpacing: '-0.015em'
-                }}>
-                  {item.title}
-                </h3>
+          {/* Row 2: Cards 05 to 08 (Animates from LEFT) */}
+          <div className="features-row features-row-left">
+            {[
+              {
+                num: '05',
+                IconComponent: Truck,
+                title: 'Order Tracking',
+                desc: 'Track your order status in real time',
+                action: () => navigate(isAuthenticated ? '/my-orders' : '/login')
+              },
+              {
+                num: '06',
+                IconComponent: Clock,
+                title: 'Past Orders',
+                desc: 'View order history and previous receipts anytime',
+                action: () => navigate(isAuthenticated ? '/my-orders' : '/login')
+              },
+              {
+                num: '07',
+                IconComponent: Coffee,
+                title: 'Fast Pickup',
+                desc: 'Quick and convenient campus pickup',
+                action: () => handleCafeSelection('jeccafe')
+              },
+              {
+                num: '08',
+                IconComponent: ShieldCheck,
+                title: 'Secure Login',
+                desc: 'Your data and orders stay safe with us',
+                action: () => setShowLoginModal(true)
+              },
+            ].map((item, i) => {
+              const CardIcon = item.IconComponent;
+              return (
+                <div
+                  key={i}
+                  className="feature-card-item"
+                  onClick={item.action}
+                >
+                  {/* Number on top-right */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '0.65rem',
+                    right: '0.75rem',
+                    fontSize: '0.7rem',
+                    fontWeight: 700,
+                    color: '#A89F93',
+                    letterSpacing: '0.04em'
+                  }}>
+                    {item.num}
+                  </div>
 
-                {/* Description */}
-                <p style={{
-                  fontSize: '0.76rem',
-                  color: '#6B6258',
-                  lineHeight: 1.4,
-                  margin: '0 0 0.65rem',
-                  flex: 1
-                }}>
-                  {item.desc}
-                </p>
+                  {/* Glowing Sunburst Halo Icon Disk */}
+                  <div className="feature-icon-halo">
+                    <Sparkles size={7} color="#D59B58" style={{ position: 'absolute', top: '5px', left: '5px', opacity: 0.8 }} />
+                    <Sparkles size={8} color="#D59B58" style={{ position: 'absolute', bottom: '6px', right: '5px', opacity: 0.85 }} />
 
-                {/* Bottom-right Arrow Button */}
-                <div className="feature-arrow-btn">
-                  <ArrowRight size={11} strokeWidth={2.4} />
+                    <div className="feature-icon-disk">
+                      <CardIcon size={17} strokeWidth={2} />
+                    </div>
+                  </div>
+
+                  {/* Title */}
+                  <h3 style={{
+                    fontFamily: "'Fraunces', Georgia, serif",
+                    fontSize: '0.96rem',
+                    fontWeight: 800,
+                    color: '#1A1816',
+                    margin: '0 0 0.25rem',
+                    letterSpacing: '-0.015em'
+                  }}>
+                    {item.title}
+                  </h3>
+
+                  {/* Description */}
+                  <p style={{
+                    fontSize: '0.76rem',
+                    color: '#6B6258',
+                    lineHeight: 1.4,
+                    margin: '0 0 0.65rem',
+                    flex: 1
+                  }}>
+                    {item.desc}
+                  </p>
+
+                  {/* Bottom-right Arrow Button */}
+                  <div className="feature-arrow-btn">
+                    <ArrowRight size={11} strokeWidth={2.4} />
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
         {/* Bottom Handwritten Script + Slogan Divider */}
@@ -1978,10 +2137,10 @@ export const LandingPage = () => {
           </button>
         </div>
 
-        {/* 2 Big Side-by-Side Café Cards (Matching User Mockup) */}
+        {/* 2 Big Side-by-Side Café Cards (Matching User Mockup with Smooth Scroll Animations) */}
         <div className="cafes-grid">
-          {/* Card 1: JEC Cafe */}
-          <div className="cafe-card-inner">
+          {/* Card 1: JEC Cafe (Slides in from Left) */}
+          <div className="cafe-card-inner cafe-card-left">
             {/* Left Photo with Real Glowing Neon Sign */}
             <div className="cafe-card-banner">
               <img
@@ -2063,8 +2222,8 @@ export const LandingPage = () => {
             </div>
           </div>
 
-          {/* Card 2: JEC Bytes */}
-          <div className="cafe-card-inner">
+          {/* Card 2: JEC Bytes (Slides in from Right) */}
+          <div className="cafe-card-inner cafe-card-right">
             {/* Left Photo with Real Glowing Neon Sign */}
             <div className="cafe-card-banner">
               <img
@@ -2451,16 +2610,16 @@ export const LandingPage = () => {
         </div>
       </section>
 
-      {/* 6. Stats Row */}
+      {/* 6. Stats / Trust Badges Row (Animates in from Right on Scroll) */}
       <section
-        id="about-section"
+        id="stats-trust-section"
         ref={addToRefs}
         className="landing-section reveal-on-scroll"
-        style={{ paddingTop: '1rem', paddingBottom: '3rem' }}
+        style={{ paddingTop: '1rem', paddingBottom: '3rem', overflow: 'hidden' }}
       >
         <div className="stats-grid">
           {/* Card 1: Handcrafted */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div className="trust-badge-item" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <div style={{
               width: '46px',
               height: '46px',
@@ -2480,7 +2639,7 @@ export const LandingPage = () => {
           </div>
 
           {/* Card 2: Best Combos */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div className="trust-badge-item" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <div style={{
               width: '46px',
               height: '46px',
@@ -2500,7 +2659,7 @@ export const LandingPage = () => {
           </div>
 
           {/* Card 3: Fresh */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div className="trust-badge-item" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <div style={{
               width: '46px',
               height: '46px',
@@ -2520,7 +2679,7 @@ export const LandingPage = () => {
           </div>
 
           {/* Card 4: Two Cafés */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div className="trust-badge-item" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <div style={{
               width: '46px',
               height: '46px',
@@ -2842,138 +3001,661 @@ export const LandingPage = () => {
         </div>
       </footer>
 
-      {/* 8. Direct 1-Click Login Modal */}
+      {/* 8. Luxury Ivory Login Modal (Exact User Mockup Reference) */}
       {showLoginModal && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(26, 24, 22, 0.72)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
-          zIndex: 100,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '1.25rem'
-        }}>
-          <div style={{
-            background: '#FFFFFF',
-            borderRadius: '28px',
-            maxWidth: '440px',
-            width: '100%',
-            padding: '2.25rem',
-            boxShadow: '0 30px 60px -15px rgba(0,0,0,0.3)',
-            border: '1px solid #EAE6DF',
-            position: 'relative'
-          }}>
-            <button
-              onClick={() => setShowLoginModal(false)}
+        <div
+          className="support-modal-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowLoginModal(false);
+          }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(26, 18, 12, 0.74)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            zIndex: 100,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.25rem'
+          }}
+        >
+          <div
+            style={{
+              position: 'relative',
+              background: 'linear-gradient(175deg, #FFFDF9 0%, #FAF5ED 55%, #F6EDE2 100%)',
+              borderRadius: '28px',
+              maxWidth: '495px',
+              width: '100%',
+              padding: '2.5rem 2.4rem 2.15rem',
+              boxShadow: '0 32px 75px -12px rgba(32, 17, 8, 0.38), 0 0 0 1px rgba(255,255,255,0.85) inset',
+              border: '1.5px solid #EBE0D2',
+              overflow: 'hidden'
+            }}
+          >
+            {/* Top-Right Botanical Branch Sketch Watermark */}
+            <svg
               style={{
                 position: 'absolute',
-                top: '18px',
-                right: '18px',
-                background: '#F5F3EF',
-                border: 'none',
-                width: '32px',
-                height: '32px',
+                top: '10px',
+                right: '42px',
+                width: '105px',
+                height: '105px',
+                opacity: 0.18,
+                pointerEvents: 'none'
+              }}
+              viewBox="0 0 100 100"
+              fill="none"
+              stroke="#9C5B32"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M75 12 C60 28, 48 55, 42 85" />
+              <path d="M68 20 C64 14, 52 16, 54 24 C56 30, 65 28, 68 20 Z" fill="#9C5B32" fillOpacity="0.3" />
+              <path d="M58 33 C52 28, 42 32, 45 40 C47 45, 56 42, 58 33 Z" fill="#9C5B32" fillOpacity="0.3" />
+              <path d="M49 48 C42 44, 32 48, 36 56 C39 61, 47 58, 49 48 Z" fill="#9C5B32" fillOpacity="0.3" />
+            </svg>
+
+            {/* Bottom-Left Botanical Accent */}
+            <svg
+              style={{
+                position: 'absolute',
+                bottom: '12px',
+                left: '14px',
+                width: '42px',
+                height: '42px',
+                opacity: 0.22,
+                pointerEvents: 'none'
+              }}
+              viewBox="0 0 60 60"
+              fill="none"
+              stroke="#9C5B32"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M10 50 C20 40, 35 25, 48 12" />
+              <path d="M22 38 C18 32, 24 24, 30 26 C34 28, 32 36, 22 38 Z" fill="#9C5B32" fillOpacity="0.3" />
+            </svg>
+
+            {/* Top Close Button (Circular, matching reference) */}
+            <button
+              onClick={() => setShowLoginModal(false)}
+              aria-label="Close modal"
+              style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                background: '#F6EFE6',
+                border: '1px solid #E6DACB',
+                width: '34px',
+                height: '34px',
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '1rem',
-                color: '#57534E',
+                fontSize: '0.95rem',
+                color: '#5C4332',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                zIndex: 4
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#EADCCB';
+                e.currentTarget.style.transform = 'scale(1.06)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#F6EFE6';
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+            >
+              ✕
+            </button>
+
+            {/* Top-Right Handwritten Accent Stamp (Matches reference screenshot) */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '72px',
+                right: '24px',
+                textAlign: 'right',
+                pointerEvents: 'none',
+                zIndex: 2
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: "'Caveat', cursive",
+                  fontSize: '1.24rem',
+                  color: '#9C5B32',
+                  fontWeight: 600,
+                  transform: 'rotate(-4deg)',
+                  lineHeight: 1.15
+                }}
+              >
+                Good Food<br />
+                Brighter Days
+                <div style={{ width: '48px', height: '2px', background: '#9C5B32', margin: '3px 0 5px auto', borderRadius: '2px', opacity: 0.8 }} />
+              </div>
+              <div
+                style={{
+                  fontSize: '0.58rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.14em',
+                  color: '#8C674E',
+                  textTransform: 'uppercase',
+                  lineHeight: 1.35
+                }}
+              >
+                JEC DINING<br />
+                WITH YOU ALWAYS
+              </div>
+            </div>
+
+            {/* Editorial Serif Heading: Welcome to JEC Dining */}
+            <h2
+              style={{
+                fontFamily: "'Fraunces', Georgia, serif",
+                fontSize: '1.85rem',
+                fontWeight: 800,
+                color: '#1A1816',
+                margin: '0 0 0.45rem',
+                letterSpacing: '-0.025em',
+                lineHeight: 1.2,
+                maxWidth: '260px',
+                position: 'relative',
+                zIndex: 2
+              }}
+            >
+              Welcome to JEC Dining
+            </h2>
+
+            {/* Subtitle */}
+            <p
+              style={{
+                color: '#6E6258',
+                fontSize: '0.88rem',
+                marginBottom: '1.65rem',
+                lineHeight: 1.55,
+                maxWidth: '280px',
+                position: 'relative',
+                zIndex: 2
+              }}
+            >
+              Sign in to unlock Breakfast, Lunch, Tea/Snacks, and Dinner combos from {targetCafeAfterLogin === 'jec-bytest' ? 'JEC Bytes' : 'JEC Cafe'}.
+            </p>
+
+            {/* Login Form: USERNAME AND PASSWORD ONLY (NO 1-CLICK BUTTON) */}
+            <form onSubmit={handleQuickLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem', position: 'relative', zIndex: 2 }}>
+              {/* Field 1: Email or Username */}
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '0.86rem',
+                    fontWeight: 700,
+                    color: '#1A1816',
+                    marginBottom: '7px'
+                  }}
+                >
+                  Email or Username
+                </label>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    background: '#FFFFFF',
+                    border: '1.5px solid #E8DDD0',
+                    borderRadius: '16px',
+                    padding: '6px 14px',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.02)',
+                    transition: 'border-color 0.2s, box-shadow 0.2s'
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '38px',
+                      height: '38px',
+                      borderRadius: '50%',
+                      background: '#F9F2EA',
+                      border: '1px solid #EADBCC',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}
+                  >
+                    <Mail size={18} color="#9C5B32" strokeWidth={2} />
+                  </div>
+                  <input
+                    type="text"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    placeholder="customer@jec.ac.in"
+                    required
+                    style={{
+                      width: '100%',
+                      border: 'none',
+                      outline: 'none',
+                      background: 'transparent',
+                      fontSize: '0.96rem',
+                      color: '#1A1816',
+                      fontWeight: 500
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Field 2: Password with Forgot Password link */}
+              <div>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '7px'
+                  }}
+                >
+                  <label
+                    style={{
+                      fontSize: '0.86rem',
+                      fontWeight: 700,
+                      color: '#1A1816'
+                    }}
+                  >
+                    Password
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotModal(true)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#9C5B32',
+                      fontWeight: 700,
+                      fontSize: '0.82rem',
+                      cursor: 'pointer',
+                      padding: 0
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                    onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    background: '#FFFFFF',
+                    border: '1.5px solid #E8DDD0',
+                    borderRadius: '16px',
+                    padding: '6px 14px',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.02)',
+                    transition: 'border-color 0.2s, box-shadow 0.2s'
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '38px',
+                      height: '38px',
+                      borderRadius: '50%',
+                      background: '#F9F2EA',
+                      border: '1px solid #EADBCC',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}
+                  >
+                    <Lock size={18} color="#9C5B32" strokeWidth={2} />
+                  </div>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    required
+                    style={{
+                      width: '100%',
+                      border: 'none',
+                      outline: 'none',
+                      background: 'transparent',
+                      fontSize: '0.96rem',
+                      color: '#1A1816',
+                      fontWeight: 500
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#8C7E74',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '4px'
+                    }}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Submit Button: Sign In & Unlock Combos -> */}
+              <button
+                type="submit"
+                disabled={authLoading}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  width: '100%',
+                  padding: '14px',
+                  marginTop: '0.4rem',
+                  background: 'linear-gradient(135deg, #3A1F12 0%, #1A0F09 100%)',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '16px',
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  cursor: authLoading ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 10px 24px rgba(45, 20, 10, 0.32)',
+                  transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
+                }}
+                onMouseEnter={(e) => {
+                  if (!authLoading) {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 14px 30px rgba(45, 20, 10, 0.42)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!authLoading) {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 10px 24px rgba(45, 20, 10, 0.32)';
+                  }
+                }}
+              >
+                <span>{authLoading ? 'Signing In...' : 'Sign In & Unlock Combos'}</span>
+                <ArrowRight size={18} strokeWidth={2.4} />
+              </button>
+            </form>
+
+            {/* Bottom Elegant Card Footer (Matches reference screenshot) */}
+            <div
+              style={{
+                marginTop: '1.75rem',
+                paddingTop: '1.15rem',
+                borderTop: '1px solid #EBE0D2',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                position: 'relative',
+                zIndex: 2
+              }}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#9C5B32"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ opacity: 0.65 }}
+              >
+                <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
+                <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
+              </svg>
+              <span
+                style={{
+                  fontSize: '0.66rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.12em',
+                  color: '#8A7A6E',
+                  textTransform: 'uppercase'
+                }}
+              >
+                GOOD FOOD • BETTER STUDENTS • BRIGHTER DAYS
+              </span>
+              <span style={{ width: '24px', height: '1px', background: '#D6C7B7', display: 'inline-block' }} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 9. Forgot Password Help Modal */}
+      {showForgotModal && (
+        <div
+          className="support-modal-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowForgotModal(false);
+              setForgotSent(false);
+            }
+          }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(26, 18, 12, 0.76)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            zIndex: 110,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.25rem'
+          }}
+        >
+          <div
+            style={{
+              position: 'relative',
+              background: 'linear-gradient(175deg, #FFFDF9 0%, #FAF5ED 55%, #F6EDE2 100%)',
+              borderRadius: '28px',
+              maxWidth: '465px',
+              width: '100%',
+              padding: '2.35rem 2.25rem 2rem',
+              boxShadow: '0 30px 70px -10px rgba(32, 17, 8, 0.38)',
+              border: '1.5px solid #EBE0D2',
+              overflow: 'hidden'
+            }}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => {
+                setShowForgotModal(false);
+                setForgotSent(false);
+              }}
+              aria-label="Close modal"
+              style={{
+                position: 'absolute',
+                top: '18px',
+                right: '18px',
+                background: '#F6EFE6',
+                border: '1px solid #E6DACB',
+                width: '34px',
+                height: '34px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.95rem',
+                color: '#5C4332',
                 cursor: 'pointer'
               }}
             >
               ✕
             </button>
 
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              background: '#FDF3EE',
-              padding: '5px 12px',
-              borderRadius: '20px',
-              fontSize: '0.78rem',
-              fontWeight: 800,
-              color: '#C86D44',
-              marginBottom: '0.85rem'
-            }}>
-              <LogIn size={13} />
-              <span>DIRECT LOGIN • NO SIGNUP NEEDED</span>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '7px',
+                background: '#FDF1EB',
+                border: '1.2px solid #F0DAC9',
+                padding: '5px 14px',
+                borderRadius: '24px',
+                fontSize: '0.72rem',
+                fontWeight: 800,
+                color: '#8B4822',
+                letterSpacing: '0.04em',
+                marginBottom: '1rem'
+              }}
+            >
+              <KeyRound size={13} strokeWidth={2.5} />
+              <span>CAMPUS CREDENTIAL HELP</span>
             </div>
 
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1A1816', margin: '0 0 0.35rem' }}>
-              Welcome to JEC Dining
+            <h2
+              style={{
+                fontFamily: "'Fraunces', Georgia, serif",
+                fontSize: '1.85rem',
+                fontWeight: 800,
+                color: '#1A1816',
+                margin: '0 0 0.45rem',
+                lineHeight: 1.2
+              }}
+            >
+              Reset Your Password
             </h2>
-            <p style={{ color: '#78716C', fontSize: '0.88rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>
-              Sign in to unlock Breakfast, Lunch, Tea/Snacks, and Dinner combos from {targetCafeAfterLogin === 'jec-bytest' ? 'JEC Bytes' : 'JEC Cafe'}.
+
+            <p style={{ color: '#6E6258', fontSize: '0.88rem', marginBottom: '1.5rem', lineHeight: 1.55 }}>
+              Enter your registered Jyothi Engineering College email address to receive password reset instructions.
             </p>
 
-            <form onSubmit={handleQuickLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div className="form-group">
-                <label className="form-label">Email or Username</label>
-                <input
-                  type="email"
-                  className="form-input"
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                  placeholder="customer@jec.ac.in"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Password</label>
-                <input
-                  type="password"
-                  className="form-input"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={authLoading}
-                className="btn btn-primary btn-full"
+            {forgotSent ? (
+              <div
                 style={{
-                  background: '#1A1816',
-                  color: '#FFFFFF',
-                  padding: '0.9rem',
-                  fontSize: '1rem',
-                  borderRadius: '14px',
-                  fontWeight: 700,
-                  boxShadow: '0 6px 16px rgba(0,0,0,0.15)'
+                  background: '#F2FAF3',
+                  border: '1.5px solid #C5E6CE',
+                  borderRadius: '16px',
+                  padding: '1.25rem',
+                  marginBottom: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px'
                 }}
               >
-                {authLoading ? 'Signing In...' : 'Sign In & Unlock Combos'}
-              </button>
-            </form>
-
-            <div style={{
-              marginTop: '1.5rem',
-              paddingTop: '1.25rem',
-              borderTop: '1px solid #ECE7DF',
-              textAlign: 'center'
-            }}>
-              <div style={{ fontSize: '0.78rem', color: '#78716C', marginBottom: '8px' }}>
-                Instant 1-Click Access:
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1B6A35', fontWeight: 800, fontSize: '0.92rem' }}>
+                  <CheckCircle2 size={18} />
+                  <span>Reset Link Sent</span>
+                </div>
+                <p style={{ fontSize: '0.85rem', color: '#2C5537', margin: 0, lineHeight: 1.5 }}>
+                  We've dispatched password recovery steps to <strong>{forgotEmail || 'your email'}</strong>. Please check your inbox.
+                </p>
+                <div style={{ fontSize: '0.78rem', color: '#4A7A57', marginTop: '4px' }}>
+                  Need urgent access? Contact JEC Dining Office at <strong>jcs@jecc.ac.in</strong>.
+                </div>
               </div>
+            ) : (
+              <form onSubmit={handleForgotSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.86rem', fontWeight: 700, color: '#1A1816', marginBottom: '7px' }}>
+                    Registered Campus Email
+                  </label>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      background: '#FFFFFF',
+                      border: '1.5px solid #E8DDD0',
+                      borderRadius: '16px',
+                      padding: '6px 14px',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '38px',
+                        height: '38px',
+                        borderRadius: '50%',
+                        background: '#F9F2EA',
+                        border: '1px solid #EADBCC',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}
+                    >
+                      <Mail size={18} color="#9C5B32" strokeWidth={2} />
+                    </div>
+                    <input
+                      type="email"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      placeholder="customer@jec.ac.in"
+                      required
+                      style={{
+                        width: '100%',
+                        border: 'none',
+                        outline: 'none',
+                        background: 'transparent',
+                        fontSize: '0.96rem',
+                        color: '#1A1816',
+                        fontWeight: 500
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px',
+                    width: '100%',
+                    padding: '14px',
+                    marginTop: '0.3rem',
+                    background: 'linear-gradient(135deg, #3A1F12 0%, #1A0F09 100%)',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '16px',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    boxShadow: '0 10px 24px rgba(45, 20, 10, 0.32)'
+                  }}
+                >
+                  <span>Send Reset Instructions</span>
+                  <ArrowRight size={18} strokeWidth={2.4} />
+                </button>
+              </form>
+            )}
+
+            <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
               <button
                 type="button"
                 onClick={() => {
-                  setLoginEmail('customer@jec.ac.in');
-                  setLoginPassword('Customer@2026');
-                  handleQuickLogin();
+                  setShowForgotModal(false);
+                  setForgotSent(false);
                 }}
-                className="btn btn-outline btn-full btn-sm"
-                style={{ borderRadius: '12px', fontWeight: 700, fontSize: '0.88rem', padding: '8px' }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#8C674E',
+                  fontWeight: 700,
+                  fontSize: '0.88rem',
+                  cursor: 'pointer',
+                  padding: '6px'
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#1A1816')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#8C674E')}
               >
-                ⚡ 1-Click Sign In (Rahul Sharma)
+                ← Back to Sign In
               </button>
             </div>
           </div>
