@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Allow: /jeccafe
+Allow: /jec-bytest
+Allow: /combos/*
+
+# Disallow private and administrative paths
+Disallow: /checkout
+Disallow: /payment
+Disallow: /my-orders
+Disallow: /*/admin/*
+
+Sitemap: http://localhost:5173/sitemap.xml
