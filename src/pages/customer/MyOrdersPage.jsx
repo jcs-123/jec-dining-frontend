@@ -39,22 +39,55 @@ export const MyOrdersPage = () => {
   }
 
   return (
-    <div className="app-container" style={{ maxWidth: '840px' }}>
+    <div className="app-container" style={{ maxWidth: '840px', padding: '2rem 1rem' }}>
       <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-main)' }}>My Order History</h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-          Track past and active orders across JECCAFE and JEC BYTEST
+        <h1 style={{
+          fontFamily: "'Fraunces', Georgia, serif",
+          fontSize: '2rem',
+          fontWeight: 800,
+          color: '#1E140E',
+          letterSpacing: '-0.02em',
+          margin: '0 0 6px'
+        }}>
+          My Order History
+        </h1>
+        <p style={{ color: '#7A6E63', fontSize: '0.92rem', margin: 0, fontWeight: 500 }}>
+          Track past and active orders across JECCAFE and JEC BYTES
         </p>
       </div>
 
       {orders.length === 0 ? (
-        <div className="card" style={{ padding: '3.5rem 1.5rem', textAlign: 'center' }}>
-          <ShoppingBag size={48} color="var(--brand-accent)" style={{ margin: '0 auto 1rem' }} />
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>No orders yet</h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+        <div className="card" style={{
+          padding: '3.5rem 1.5rem',
+          textAlign: 'center',
+          background: '#FFFFFF',
+          border: '1.5px solid #EADBCC',
+          borderRadius: '18px',
+          boxShadow: '0 4px 14px rgba(50, 30, 15, 0.04)'
+        }}>
+          <ShoppingBag size={48} color="#D66C3E" style={{ margin: '0 auto 1rem' }} />
+          <h3 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '1.3rem', fontWeight: 800, color: '#1E140E', marginBottom: '0.5rem' }}>
+            No orders yet
+          </h3>
+          <p style={{ color: '#7A6E63', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
             You haven't placed any combo orders yet.
           </p>
-          <Link to="/" className="btn btn-primary">
+          <Link
+            to="/"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0.65rem 1.4rem',
+              borderRadius: '24px',
+              background: '#1A1816',
+              color: '#FFFFFF',
+              fontWeight: 700,
+              fontSize: '0.88rem',
+              textDecoration: 'none',
+              boxShadow: '0 3px 10px rgba(26, 24, 22, 0.2)'
+            }}
+          >
             Explore Cafés & Combos
           </Link>
         </div>
@@ -74,27 +107,35 @@ export const MyOrdersPage = () => {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   gap: '1rem',
-                  textDecoration: 'none'
+                  textDecoration: 'none',
+                  background: '#FFFFFF',
+                  border: '1.5px solid #EADBCC',
+                  borderRadius: '16px',
+                  boxShadow: '0 4px 14px rgba(50, 30, 15, 0.04)',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
                   <div style={{
-                    background: isJeccafe ? '#2E1C14' : '#0C383E',
-                    color: isJeccafe ? '#C86D44' : '#E86034',
-                    width: '42px',
-                    height: '42px',
+                    background: isJeccafe
+                      ? 'linear-gradient(135deg, #361D11 0%, #7E4323 100%)'
+                      : 'linear-gradient(135deg, #0A3D40 0%, #157E82 100%)',
+                    color: '#FFFFFF',
+                    width: '44px',
+                    height: '44px',
                     borderRadius: '12px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    flexShrink: 0
+                    flexShrink: 0,
+                    boxShadow: '0 2px 8px rgba(50, 30, 15, 0.12)'
                   }}>
                     {isJeccafe ? <Coffee size={22} /> : <Zap size={22} />}
                   </div>
 
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '2px' }}>
-                      <span style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text-main)' }}>
+                      <span style={{ fontWeight: 800, fontSize: '1.05rem', color: '#1E140E' }}>
                         #{o.orderNumber}
                       </span>
                       <span className={`badge ${getStatusBadgeClass(o.orderStatus)}`}>
@@ -102,11 +143,11 @@ export const MyOrdersPage = () => {
                       </span>
                     </div>
 
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '0.82rem', color: '#7A6E63', marginBottom: '4px', fontWeight: 500 }}>
                       {o.cafeId?.name} • {formatKolkataTime(o.createdAt)}
                     </div>
 
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-main)', opacity: 0.9 }}>
+                    <div style={{ fontSize: '0.82rem', color: '#4A423B', opacity: 0.9 }}>
                       {o.items.map(i => `${i.name} (${i.quantity}x)`).join(', ')}
                     </div>
                   </div>
@@ -114,14 +155,14 @@ export const MyOrdersPage = () => {
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0 }}>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--brand-accent)' }}>
+                    <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#D66C3E' }}>
                       {formatINR(o.totalPaise)}
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: o.paymentStatus === 'Paid' ? 'var(--status-veg)' : '#D97706', fontWeight: 600 }}>
+                    <div style={{ fontSize: '0.75rem', color: o.paymentStatus === 'Paid' ? '#15803D' : '#D97706', fontWeight: 700 }}>
                       {o.paymentStatus}
                     </div>
                   </div>
-                  <ChevronRight size={20} color="var(--text-muted)" />
+                  <ChevronRight size={18} color="#8C7E74" />
                 </div>
               </Link>
             );

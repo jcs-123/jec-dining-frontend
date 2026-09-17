@@ -12,7 +12,9 @@ import {
   ShoppingBag,
   TrendingUp,
   Search,
-  Filter
+  Filter,
+  Layers,
+  UtensilsCrossed
 } from 'lucide-react';
 
 export const AdminReportsPage = () => {
@@ -108,6 +110,8 @@ export const AdminReportsPage = () => {
 
   const orders = report?.orders || [];
   const comboSales = report?.comboSales || [];
+  const categorySales = report?.categorySales || [];
+  const itemSales = report?.itemSales || [];
 
   return (
     <div>
@@ -335,6 +339,171 @@ export const AdminReportsPage = () => {
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>Aborted orders</div>
           </div>
         </div>
+
+        {/* Category-Wise Demand Breakdown Table */}
+        {categorySales.length > 0 && (
+          <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <div>
+                <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Layers size={20} style={{ color: 'var(--brand-accent)' }} />
+                  <span>Category-Wise Sales & Scheduled Demand</span>
+                </h2>
+                <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                  Category fulfillment counts segmented by Today, Tomorrow, and picked scheduled dates
+                </p>
+              </div>
+            </div>
+
+            <div className="table-responsive">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Category Name</th>
+                    <th style={{ textAlign: 'center' }}>Today Demand</th>
+                    <th style={{ textAlign: 'center' }}>Tomorrow Demand</th>
+                    <th style={{ textAlign: 'center' }}>Picked / Future Dates</th>
+                    <th style={{ textAlign: 'center' }}>Total Units Sold</th>
+                    <th style={{ textAlign: 'right' }}>Total Revenue Generated</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {categorySales.map((cat, idx) => (
+                    <tr key={idx}>
+                      <td style={{ fontWeight: 700, fontSize: '0.95rem' }}>{cat.name}</td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '3px 10px',
+                          borderRadius: '12px',
+                          fontWeight: 700,
+                          fontSize: '0.85rem',
+                          background: cat.todayCount > 0 ? 'rgba(234, 88, 12, 0.12)' : 'var(--bg-surface-subtle)',
+                          color: cat.todayCount > 0 ? '#C2410C' : 'var(--text-muted)'
+                        }}>
+                          {cat.todayCount} portions
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '3px 10px',
+                          borderRadius: '12px',
+                          fontWeight: 700,
+                          fontSize: '0.85rem',
+                          background: cat.tomorrowCount > 0 ? 'rgba(37, 99, 235, 0.12)' : 'var(--bg-surface-subtle)',
+                          color: cat.tomorrowCount > 0 ? '#1D4ED8' : 'var(--text-muted)'
+                        }}>
+                          {cat.tomorrowCount} portions
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '3px 10px',
+                          borderRadius: '12px',
+                          fontWeight: 700,
+                          fontSize: '0.85rem',
+                          background: cat.pickedDateCount > 0 ? 'rgba(139, 92, 246, 0.12)' : 'var(--bg-surface-subtle)',
+                          color: cat.pickedDateCount > 0 ? '#7C3AED' : 'var(--text-muted)'
+                        }}>
+                          {cat.pickedDateCount} portions
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'center', fontWeight: 800 }}>
+                        {cat.totalQuantity} units
+                      </td>
+                      <td style={{ textAlign: 'right', fontWeight: 800, color: 'var(--brand-accent)' }}>
+                        {formatINR(cat.totalRevenuePaise)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Item-Wise Kitchen Preparation & Demand Table */}
+        {itemSales.length > 0 && (
+          <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <div>
+                <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <UtensilsCrossed size={20} style={{ color: '#16A34A' }} />
+                  <span>Item-Wise Kitchen Preparation Report</span>
+                </h2>
+                <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                  Total item and ingredient quantities required for kitchen prep, grouped by Today, Tomorrow, and scheduled dates
+                </p>
+              </div>
+            </div>
+
+            <div className="table-responsive">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Item / Ingredient Name</th>
+                    <th style={{ textAlign: 'center' }}>Prep for Today</th>
+                    <th style={{ textAlign: 'center' }}>Prep for Tomorrow</th>
+                    <th style={{ textAlign: 'center' }}>Prep for Picked Dates</th>
+                    <th style={{ textAlign: 'right' }}>Total Kitchen Prep Required</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {itemSales.map((item, idx) => (
+                    <tr key={idx}>
+                      <td style={{ fontWeight: 700, fontSize: '0.925rem' }}>{item.name}</td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '3px 12px',
+                          borderRadius: '12px',
+                          fontWeight: 800,
+                          fontSize: '0.85rem',
+                          background: item.todayCount > 0 ? 'rgba(234, 88, 12, 0.15)' : 'var(--bg-surface-subtle)',
+                          color: item.todayCount > 0 ? '#C2410C' : 'var(--text-muted)',
+                          border: item.todayCount > 0 ? '1px solid rgba(234, 88, 12, 0.3)' : 'none'
+                        }}>
+                          {item.todayCount > 0 ? `🔥 ${item.todayCount} units` : '0 units'}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '3px 12px',
+                          borderRadius: '12px',
+                          fontWeight: 700,
+                          fontSize: '0.85rem',
+                          background: item.tomorrowCount > 0 ? 'rgba(37, 99, 235, 0.12)' : 'var(--bg-surface-subtle)',
+                          color: item.tomorrowCount > 0 ? '#1D4ED8' : 'var(--text-muted)'
+                        }}>
+                          {item.tomorrowCount} units
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '3px 12px',
+                          borderRadius: '12px',
+                          fontWeight: 700,
+                          fontSize: '0.85rem',
+                          background: item.pickedDateCount > 0 ? 'rgba(139, 92, 246, 0.12)' : 'var(--bg-surface-subtle)',
+                          color: item.pickedDateCount > 0 ? '#7C3AED' : 'var(--text-muted)'
+                        }}>
+                          {item.pickedDateCount} units
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'right', fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)' }}>
+                        {item.totalQuantity} units
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Combo Sales Performance Table */}
         {comboSales.length > 0 && (

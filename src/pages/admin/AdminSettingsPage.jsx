@@ -171,29 +171,15 @@ export const AdminSettingsPage = () => {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
-              <div className="form-group">
-                <label className="form-label">Campus Pickup Location / Counter</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">F&B GST Tax Rate (%)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  className="form-input"
-                  value={taxRatePercent}
-                  onChange={(e) => setTaxRatePercent(e.target.value)}
-                  required
-                />
-              </div>
+            <div className="form-group">
+              <label className="form-label">Campus Pickup Location / Counter</label>
+              <input
+                type="text"
+                className="form-input"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                required
+              />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { formatINR, formatKolkataTime, getStatusBadgeClass } from '../../utils/formatters';
-import { ArrowLeft, Printer, Clock, MapPin, CheckCircle2, XCircle, AlertCircle, Coffee, Zap } from 'lucide-react';
+import { ArrowLeft, Printer, Clock, MapPin, CheckCircle2, XCircle, AlertCircle, Coffee, Zap, Calendar, Mail, QrCode } from 'lucide-react';
 
 const STATUS_STEPS = ['Pending', 'Accepted', 'Preparing', 'Ready for Pickup', 'Completed'];
 
@@ -15,6 +15,7 @@ export const OrderDetailPage = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   useEffect(() => {
     loadOrder();
@@ -37,6 +38,18 @@ export const OrderDetailPage = () => {
 
   const handlePrintReceipt = () => {
     window.open(`http://localhost:5000/api/orders/${orderId}/receipt`, '_blank');
+  };
+
+  const handleSendGmailReceipt = async () => {
+    try {
+      setSendingEmail(true);
+      const res = await api.post(`/orders/${orderId}/resend-receipt`);
+      toast.success(`Purchase receipt sent to ${order?.customerSnapshot?.email || 'your Gmail'}!`);
+    } catch (err) {
+      toast.error(err.message || 'Failed to dispatch email receipt');
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   const handleCancelOrder = async () => {
@@ -76,53 +89,126 @@ export const OrderDetailPage = () => {
   const canCancel = ['Pending', 'Accepted'].includes(order.orderStatus);
 
   return (
-    <div className="app-container" style={{ maxWidth: '820px' }}>
+    <div className="app-container" style={{ maxWidth: '820px', padding: '2rem 1rem' }}>
       <button
         onClick={() => navigate('/my-orders')}
-        className="btn btn-ghost btn-sm"
-        style={{ marginBottom: '1.25rem', gap: '6px' }}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '6px',
+          padding: '0.45rem 1rem',
+          borderRadius: '20px',
+          border: '1.5px solid #EADBCC',
+          background: '#FFFFFF',
+          color: '#1E140E',
+          fontWeight: 700,
+          fontSize: '0.84rem',
+          cursor: 'pointer',
+          marginBottom: '1.5rem',
+          boxShadow: '0 2px 6px rgba(50, 30, 15, 0.04)'
+        }}
       >
-        <ArrowLeft size={16} />
+        <ArrowLeft size={15} color="#D66C3E" />
         <span>Back to Order History</span>
       </button>
 
       {/* Main Order Card */}
-      <div className="card" style={{ padding: '2rem', marginBottom: '1.5rem' }}>
+      <div className="card" style={{
+        padding: '2rem',
+        marginBottom: '1.5rem',
+        background: '#FFFFFF',
+        border: '1.5px solid #EADBCC',
+        borderRadius: '20px',
+        boxShadow: '0 4px 16px rgba(50, 30, 15, 0.04)'
+      }}>
         <div style={{
           display: 'flex',
           flexWrap: 'wrap',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: '1rem',
-          borderBottom: '1px solid var(--divider)',
+          borderBottom: '1px solid #EADBCC',
           paddingBottom: '1.25rem',
           marginBottom: '1.5rem'
         }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
+              <h1 style={{
+                fontFamily: "'Fraunces', Georgia, serif",
+                fontSize: '1.75rem',
+                fontWeight: 800,
+                color: '#1E140E',
+                margin: 0,
+                letterSpacing: '-0.02em'
+              }}>
                 Order #{order.orderNumber}
               </h1>
               <span className={`badge ${getStatusBadgeClass(order.orderStatus)}`}>
                 {order.orderStatus}
               </span>
             </div>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+            <div style={{ fontSize: '0.84rem', color: '#7A6E63', marginTop: '4px', fontWeight: 500 }}>
               Placed at {order.cafeId?.name} • {formatKolkataTime(order.createdAt)}
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={handlePrintReceipt} className="btn btn-outline btn-sm" style={{ gap: '6px' }}>
-              <Printer size={15} />
-              <span>Print Receipt</span>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <button
+              onClick={handlePrintReceipt}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '0.45rem 0.9rem',
+                borderRadius: '16px',
+                border: '1.5px solid #EADBCC',
+                background: '#FFFFFF',
+                color: '#1E140E',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              <Printer size={14} color="#D66C3E" />
+              <span>Download Receipt</span>
+            </button>
+            <button
+              onClick={handleSendGmailReceipt}
+              disabled={sendingEmail}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '0.45rem 0.9rem',
+                borderRadius: '16px',
+                border: '1.5px solid #EADBCC',
+                background: '#FFFFFF',
+                color: '#D66C3E',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              <Mail size={14} />
+              <span>{sendingEmail ? 'Sending...' : 'Send to Gmail'}</span>
             </button>
             {canCancel && (
               <button
                 onClick={handleCancelOrder}
                 disabled={cancelling}
-                className="btn btn-outline btn-sm"
-                style={{ color: '#DC2626', borderColor: '#FCA5A5' }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '0.45rem 0.9rem',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(220, 60, 60, 0.4)',
+                  background: 'rgba(220, 60, 60, 0.08)',
+                  color: '#DC2626',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
               >
                 Cancel Order
               </button>
@@ -202,28 +288,83 @@ export const OrderDetailPage = () => {
           </div>
         )}
 
-        {/* Pickup Location Info */}
+        {/* Pickup Location & Scheduled Time Info */}
         <div style={{
           background: 'var(--bg-surface-subtle)',
-          padding: '14px 18px',
-          borderRadius: '12px',
-          display: 'flex',
-          justifyContent: 'space-between',
+          padding: '16px 20px',
+          borderRadius: '14px',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '1rem',
           alignItems: 'center',
           marginBottom: '1.75rem'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <MapPin size={18} color="var(--brand-accent)" />
+            <MapPin size={20} color="var(--brand-accent)" style={{ flexShrink: 0 }} />
             <div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>PICKUP COUNTER</div>
-              <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{order.cafeId?.address}</div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.04em' }}>PICKUP COUNTER</div>
+              <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{order.cafeId?.address || 'Counter'}</div>
             </div>
           </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Calendar size={20} color="var(--brand-accent)" style={{ flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.04em' }}>SCHEDULED PICKUP</div>
+              <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>
+                {order.pickupDate || 'Today'} • {order.pickupTimeSlot || 'Immediate'}
+              </div>
+            </div>
+          </div>
+
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>PAYMENT STATUS</div>
-            <div style={{ fontWeight: 700, color: order.paymentStatus === 'Paid' ? 'var(--status-veg)' : '#D97706' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.04em' }}>PAYMENT STATUS</div>
+            <div style={{ fontWeight: 800, fontSize: '1rem', color: order.paymentStatus === 'Paid' ? 'var(--status-veg)' : '#D97706' }}>
               {order.paymentStatus}
             </div>
+          </div>
+        </div>
+
+        {/* Counter Pickup QR Code Box */}
+        <div style={{
+          background: '#FFFFFF',
+          border: '1.5px solid var(--border-light)',
+          borderRadius: '16px',
+          padding: '1.25rem',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '1rem',
+          marginBottom: '1.75rem',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.04)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`http://localhost:5173/admin/verify-pickup/${order._id}`)}`}
+              alt="Order Pickup QR Code"
+              width="100"
+              height="100"
+              style={{ borderRadius: '10px', display: 'block', border: '1px solid #E2E8F0' }}
+            />
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.825rem', fontWeight: 800, color: 'var(--brand-accent)' }}>
+                <QrCode size={16} />
+                <span>COUNTER PICKUP QR CODE</span>
+              </div>
+              <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-main)', marginTop: '2px' }}>
+                Order #{order.orderNumber}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px', maxWidth: '320px' }}>
+                Show this QR code to the staff at <strong>{order.cafeId?.name}</strong> counter for verification & instant handover.
+              </div>
+            </div>
+          </div>
+
+          <div style={{ textAlign: 'right' }}>
+            <span className={`badge ${order.orderStatus === 'Completed' ? 'badge-status-completed' : 'badge-status-ready'}`}>
+              {order.orderStatus === 'Completed' ? 'Handed Over / Delivered' : 'Ready for Counter Scan'}
+            </span>
           </div>
         </div>
 
@@ -268,10 +409,12 @@ export const OrderDetailPage = () => {
             <span>Subtotal</span>
             <span>{formatINR(order.subtotalPaise)}</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
-            <span>GST Taxes & Fees</span>
-            <span>{formatINR(order.taxPaise)}</span>
-          </div>
+          {order.taxPaise > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
+              <span>GST Taxes & Fees</span>
+              <span>{formatINR(order.taxPaise)}</span>
+            </div>
+          )}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',

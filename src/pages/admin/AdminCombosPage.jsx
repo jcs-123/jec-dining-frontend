@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import { useToast } from '../../context/ToastContext';
 import { formatINR } from '../../utils/formatters';
 import { AdminHeader } from '../../components/admin/AdminHeader';
 import { ComboFormModal } from '../../components/admin/ComboFormModal';
-import { useToast } from '../../context/ToastContext';
-import { Plus, Edit3, Archive, EyeOff, Eye, Check, X, Search } from 'lucide-react';
+import { Plus, Edit3, Archive, EyeOff, Eye, Check, X, Search, Sliders, Lock, Store, ShieldCheck } from 'lucide-react';
 
 export const AdminCombosPage = () => {
   const { user } = useAuth();
@@ -75,7 +75,7 @@ export const AdminCombosPage = () => {
     <div>
       <AdminHeader
         title="Combo Menu Management"
-        subtitle={`Configure fixed, configurable and promotional combos for ${user?.cafe?.name}`}
+        subtitle={`Configure and manage combos exclusively for ${user?.cafe?.name || 'this café'}`}
         actions={
           <button
             onClick={() => {
@@ -86,12 +86,35 @@ export const AdminCombosPage = () => {
             style={{ gap: '6px' }}
           >
             <Plus size={16} />
-            <span>Add New Combo</span>
+            <span>Add Combo to {user?.cafe?.name || 'Café'}</span>
           </button>
         }
       />
 
       <div style={{ padding: '2rem' }}>
+        {/* Dedicated Café Tenant Isolation Banner */}
+        <div style={{
+          background: 'var(--brand-accent-light)',
+          border: '1.5px solid var(--brand-accent)',
+          borderRadius: '12px',
+          padding: '12px 18px',
+          marginBottom: '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '10px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--brand-accent)', fontWeight: 800, fontSize: '0.92rem' }}>
+            <Store size={18} />
+            <span>Active Catalog: {user?.cafe?.name} Menu Only</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+            <ShieldCheck size={15} color="var(--status-veg)" />
+            <span>Isolated Tenant Desk • Combos added here are strictly private to {user?.cafe?.name}</span>
+          </div>
+        </div>
+
         {/* Filter Toolbar */}
         <div className="card" style={{ padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ position: 'relative', flex: '1 1 260px', maxWidth: '380px' }}>
@@ -182,12 +205,25 @@ export const AdminCombosPage = () => {
                           </div>
                         )}
                       </td>
-                      <td style={{ fontWeight: 600 }}>
-                        {c.availableStock >= 0 ? c.availableStock : 'Unlimited'}
-                      </td>
                       <td>
-                        <span style={{ fontSize: '0.8rem', color: c.isConfigurable ? 'var(--brand-accent)' : 'var(--text-muted)' }}>
-                          {c.isConfigurable ? '⚙️ Configurable' : '🔒 Fixed'}
+                        <span style={{
+                          fontSize: '0.8rem',
+                          color: c.isConfigurable ? 'var(--brand-accent)' : 'var(--text-muted)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px'
+                        }}>
+                          {c.isConfigurable ? (
+                            <>
+                              <Sliders size={13} />
+                              <span>Configurable</span>
+                            </>
+                          ) : (
+                            <>
+                              <Lock size={13} />
+                              <span>Fixed</span>
+                            </>
+                          )}
                         </span>
                       </td>
                       <td>
@@ -242,6 +278,7 @@ export const AdminCombosPage = () => {
         onClose={() => setIsModalOpen(false)}
         combo={editingCombo}
         categories={categories}
+        cafeName={user?.cafe?.name}
         onSaved={loadCatalog}
       />
     </div>

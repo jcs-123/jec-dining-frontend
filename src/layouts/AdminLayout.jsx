@@ -44,7 +44,7 @@ export const AdminLayout = () => {
   if (!user || !isAdmin) return null;
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-app)' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#FAF6EE' }}>
       <AdminSidebar />
       <main style={{ flex: 1, overflowY: 'auto', minWidth: 0 }}>
         <Outlet />

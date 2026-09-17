@@ -173,8 +173,8 @@ export const LandingPage = () => {
   const [forgotSent, setForgotSent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [targetCafeAfterLogin, setTargetCafeAfterLogin] = useState('jeccafe');
-  const [loginEmail, setLoginEmail] = useState('customer@jec.ac.in');
-  const [loginPassword, setLoginPassword] = useState('Customer@2026');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
   const [footerPolicyModal, setFooterPolicyModal] = useState(null); // 'privacy' | 'terms' | 'contact' | 'support'
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -1628,7 +1628,7 @@ export const LandingPage = () => {
             gap: '6px'
           }}>
             <span>Food Connects People</span>
-            <span style={{ fontSize: '1.3rem' }}>🤎</span>
+            <Heart size={20} fill="#8A5838" color="#8A5838" />
           </div>
         </div>
 
@@ -1767,7 +1767,7 @@ export const LandingPage = () => {
             userSelect: 'none'
           }}>
             <span>Good Food Brighter Days</span>
-            <span style={{ fontSize: '1.1rem' }}>♥</span>
+            <Heart size={14} fill="#8A5838" color="#8A5838" />
           </div>
 
           {/* Right: Simple. Secure. Satisfying. */}
@@ -2004,7 +2004,7 @@ export const LandingPage = () => {
             userSelect: 'none'
           }}>
             <span>Students Fuel Change</span>
-            <span style={{ fontSize: '1.1rem' }}>♥</span>
+            <Heart size={14} fill="#8A5838" color="#8A5838" />
           </div>
 
           {/* Center Slogan Divider */}
@@ -2172,9 +2172,13 @@ export const LandingPage = () => {
                     borderRadius: '20px',
                     fontSize: '0.72rem',
                     fontWeight: 800,
-                    letterSpacing: '0.04em'
+                    letterSpacing: '0.04em',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
                   }}>
-                    📍 On Campus
+                    <MapPin size={12} />
+                    <span>On Campus</span>
                   </span>
                 </div>
 
@@ -2251,9 +2255,13 @@ export const LandingPage = () => {
                     borderRadius: '20px',
                     fontSize: '0.72rem',
                     fontWeight: 800,
-                    letterSpacing: '0.04em'
+                    letterSpacing: '0.04em',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
                   }}>
-                    📍 On Campus
+                    <MapPin size={12} />
+                    <span>On Campus</span>
                   </span>
                 </div>
 
@@ -2496,11 +2504,10 @@ export const LandingPage = () => {
                   fontSize: '1.35rem',
                   color: '#9C5B32',
                   transform: 'rotate(-6deg)',
-                  textAlign: 'right',
-                  lineHeight: 1.1,
-                  userSelect: 'none'
+                  textAlign: 'right'
                 }}>
-                  Students<br />Fuel Change ♥
+                  <span>Students<br />Fuel Change</span>{' '}
+                  <Heart size={14} fill="#9C5B32" color="#9C5B32" style={{ display: 'inline', verticalAlign: '-2px' }} />
                 </div>
               </div>
             </div>
@@ -2601,9 +2608,13 @@ export const LandingPage = () => {
                 textAlign: 'right',
                 transform: 'rotate(-5deg)',
                 userSelect: 'none',
-                marginTop: 'auto'
+                marginTop: 'auto',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px'
               }}>
-                Good Food Better Tomorrows ♥
+                <span>Good Food Better Tomorrows</span>
+                <Heart size={14} fill="#9C5B32" color="#9C5B32" />
               </div>
             </div>
           </div>
@@ -2716,7 +2727,7 @@ export const LandingPage = () => {
           <div style={{ marginRight: '4px' }}>Brighter</div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
             <span>Days</span>
-            <span style={{ fontSize: '1.4rem' }}>🤎</span>
+            <Heart size={20} fill="#8A5838" color="#8A5838" />
           </div>
         </div>
 
@@ -3234,7 +3245,7 @@ export const LandingPage = () => {
                     type="text"
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
-                    placeholder="customer@jec.ac.in"
+                    placeholder="Enter your email"
                     required
                     style={{
                       width: '100%',
@@ -3318,7 +3329,7 @@ export const LandingPage = () => {
                     type={showPassword ? 'text' : 'password'}
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
-                    placeholder="••••••••••••"
+                    placeholder="Enter your password"
                     required
                     style={{
                       width: '100%',
@@ -3595,7 +3606,7 @@ export const LandingPage = () => {
                       type="email"
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
-                      placeholder="customer@jec.ac.in"
+                      placeholder="Enter your email"
                       required
                       style={{
                         width: '100%',

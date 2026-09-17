@@ -28,9 +28,12 @@ export const AuthProvider = ({ children }) => {
     fetchCurrentUser();
   }, []);
 
-  const loginCustomer = async (email, password) => {
+  const loginCustomer = async (identifierOrEmail, password) => {
     try {
-      const res = await api.post('/auth/login', { email, password });
+      const payload = typeof identifierOrEmail === 'object'
+        ? identifierOrEmail
+        : { identifier: identifierOrEmail, password };
+      const res = await api.post('/auth/login', payload);
       if (res.success) {
         setUser(res.user);
         toast.success(`Welcome back, ${res.user.name}!`);
@@ -42,16 +45,39 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const registerCustomer = async ({ name, email, phone, password }) => {
+  const registerCustomer = async ({ name, email, username, admissionNumber, phone, password, cafeId, cafeName }) => {
     try {
-      const res = await api.post('/auth/register', { name, email, phone, password });
+      const res = await api.post('/auth/register', {
+        name,
+        email,
+        username,
+        admissionNumber,
+        phone,
+        password,
+        cafeId,
+        cafeName
+      });
       if (res.success) {
         setUser(res.user);
-        toast.success('Registration successful!');
+        toast.success('Registration successful! Welcome to JEC Dining.');
         return res.user;
       }
     } catch (err) {
       toast.error(err.message || 'Registration failed');
+      throw err;
+    }
+  };
+
+  const changeCustomerCafe = async ({ cafeId, cafeName, cafeSlug }) => {
+    try {
+      const res = await api.put('/auth/customer/cafe', { cafeId, cafeName, cafeSlug });
+      if (res.success && res.user) {
+        setUser(res.user);
+        toast.success(res.message || 'Café updated successfully');
+        return res.user;
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to change café');
       throw err;
     }
   };
@@ -73,10 +99,14 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await api.post('/auth/logout', {});
+    } catch {
+      // ignore
+    } finally {
       setUser(null);
       toast.info('You have been logged out.');
-    } catch {
-      setUser(null);
+      if (window.location.pathname !== '/') {
+        window.location.href = '/';
+      }
     }
   };
 
@@ -86,6 +116,7 @@ export const AuthProvider = ({ children }) => {
       loading,
       loginCustomer,
       registerCustomer,
+      changeCustomerCafe,
       loginAdmin,
       logout,
       refreshUser: fetchCurrentUser,

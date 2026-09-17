@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { CafeHeader } from '../components/cafe/CafeHeader';
 import { CartDrawer } from '../components/cart/CartDrawer';
@@ -8,9 +8,16 @@ import { useCafe } from '../context/CafeContext';
 import { useAuth } from '../context/AuthContext';
 
 export const CustomerLayout = () => {
-  const { currentCafe } = useCafe();
+  const { currentCafe, selectCafeBySlug, cafes } = useCafe();
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
+
+  useEffect(() => {
+    const slug = location.pathname.replace(/^\//, '').split('/')[0].toLowerCase();
+    if (slug === 'jeccafe' || slug === 'jec-bytest') {
+      selectCafeBySlug(slug, cafes);
+    }
+  }, [location.pathname, cafes]);
 
   if (loading) {
     return (
@@ -34,7 +41,7 @@ export const CustomerLayout = () => {
     <div className="page-wrapper">
       <CafeHeader cafe={currentCafe} />
       <main className="main-content">
-        <Outlet />
+        <Outlet key={location.pathname} />
       </main>
       <CartDrawer />
       <StickyCartBar />

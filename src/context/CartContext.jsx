@@ -36,14 +36,15 @@ export const CartProvider = ({ children }) => {
     }
   }, [items, cartCafe]);
 
-  // Generate unique item key based on combo ID and option selections
-  const generateCustomKey = (comboId, selectedOptions = []) => {
+  // Generate unique item key based on combo ID, option selections, and scheduled pickup date
+  const generateCustomKey = (comboId, selectedOptions = [], scheduledDate = 'Today') => {
     const sortedOptions = [...selectedOptions].sort((a, b) => a.optionName.localeCompare(b.optionName));
     const optStr = sortedOptions.map(o => `${o.groupName}:${o.optionName}`).join('|');
-    return `${comboId}__${optStr}`;
+    const dateStr = (scheduledDate || 'Today').trim();
+    return `${comboId}__${dateStr}__${optStr}`;
   };
 
-  const addItem = (cafe, combo, quantity = 1, selectedOptions = []) => {
+  const addItem = (cafe, combo, quantity = 1, selectedOptions = [], scheduledDate = 'Today') => {
     // Check if switching cafes with items already in cart
     if (cartCafe && cartCafe.slug !== cafe.slug && items.length > 0) {
       return new Promise((resolve) => {
@@ -52,7 +53,7 @@ export const CartProvider = ({ children }) => {
           onConfirm: () => {
             setItems([]);
             setCartCafe(cafe);
-            performAdd(cafe, combo, quantity, selectedOptions);
+            performAdd(cafe, combo, quantity, selectedOptions, scheduledDate);
             setPendingCafeSwitch(null);
             resolve(true);
           },
@@ -68,12 +69,13 @@ export const CartProvider = ({ children }) => {
       setCartCafe(cafe);
     }
 
-    performAdd(cafe, combo, quantity, selectedOptions);
+    performAdd(cafe, combo, quantity, selectedOptions, scheduledDate);
     return Promise.resolve(true);
   };
 
-  const performAdd = (cafe, combo, quantity, selectedOptions) => {
-    const customKey = generateCustomKey(combo._id || combo.id, selectedOptions);
+  const performAdd = (cafe, combo, quantity, selectedOptions, scheduledDate = 'Today') => {
+    const dateLabel = scheduledDate || 'Today';
+    const customKey = generateCustomKey(combo._id || combo.id, selectedOptions, dateLabel);
     const effectiveBase = combo.offerPricePaise != null ? combo.offerPricePaise : combo.basePricePaise;
     const extrasPaise = selectedOptions.reduce((sum, opt) => sum + (opt.extraPricePaise || 0), 0);
     const unitPricePaise = effectiveBase + extrasPaise;
@@ -95,13 +97,14 @@ export const CartProvider = ({ children }) => {
           unitPricePaise,
           quantity,
           isVeg: combo.isVeg,
+          scheduledDate: dateLabel,
           selectedOptions,
           fixedItemsSnapshot: combo.fixedItems || []
         }
       ];
     });
 
-    toast.success(`Added "${combo.name}" to your cart!`);
+    toast.success(`Added "${combo.name}" (${dateLabel}) to your cart!`);
   };
 
   const updateQuantity = (customKey, newQty) => {
@@ -122,11 +125,11 @@ export const CartProvider = ({ children }) => {
     setCartCafe(null);
   };
 
-  // Pricing calculations
+  // Pricing calculations (0% GST - GST removed upon user request)
   const subtotalPaise = items.reduce((sum, item) => sum + item.unitPricePaise * item.quantity, 0);
-  const taxRate = cartCafe?.taxRatePercent || 5.0;
-  const taxPaise = Math.round(subtotalPaise * (taxRate / 100));
-  const totalPaise = subtotalPaise + taxPaise;
+  const taxRate = 0;
+  const taxPaise = 0;
+  const totalPaise = subtotalPaise;
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (

@@ -2,24 +2,47 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui/Modal';
 import { api } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
-import { Plus, Trash2, Upload, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, Upload, AlertCircle, Store, Database, Check, X } from 'lucide-react';
 
-export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved }) => {
+export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, cafeName }) => {
   const [categoryId, setCategoryId] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [image, setImage] = useState('');
   const [isVeg, setIsVeg] = useState(true);
   const [basePriceRupees, setBasePriceRupees] = useState('');
-  const [offerPriceRupees, setOfferPriceRupees] = useState('');
-  const [availableStock, setAvailableStock] = useState(50);
-  const [isConfigurable, setIsConfigurable] = useState(false);
   const [fixedItems, setFixedItems] = useState([]);
-  const [customizationGroups, setCustomizationGroups] = useState([]);
   const [displayOrder, setDisplayOrder] = useState(0);
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+
+  // DB items state
+  const [dbItems, setDbItems] = useState([]);
+  const [isAddingNewDbItem, setIsAddingNewDbItem] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemCategory, setNewItemCategory] = useState('Kitchen Essentials');
+  const [newItemIsVeg, setNewItemIsVeg] = useState(true);
+  const [newItemNotes, setNewItemNotes] = useState('');
+  const [savingItem, setSavingItem] = useState(false);
+
   const toast = useToast();
+
+  useEffect(() => {
+    if (isOpen) {
+      loadDbItems();
+    }
+  }, [isOpen]);
+
+  const loadDbItems = async () => {
+    try {
+      const res = await api.get('/items/admin');
+      if (res.success && Array.isArray(res.items)) {
+        setDbItems(res.items);
+      }
+    } catch (err) {
+      console.error('Failed to load DB items:', err);
+    }
+  };
 
   useEffect(() => {
     if (combo) {
@@ -29,19 +52,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved }) 
       setImage(combo.image || '');
       setIsVeg(combo.isVeg !== undefined ? combo.isVeg : true);
       setBasePriceRupees(combo.basePricePaise ? (combo.basePricePaise / 100).toString() : '');
-      setOfferPriceRupees(combo.offerPricePaise ? (combo.offerPricePaise / 100).toString() : '');
-      setAvailableStock(combo.availableStock !== undefined ? combo.availableStock : 50);
-      setIsConfigurable(!!combo.isConfigurable);
       setFixedItems(combo.fixedItems || []);
-      setCustomizationGroups(
-        (combo.customizationGroups || []).map(g => ({
-          ...g,
-          options: (g.options || []).map(o => ({
-            ...o,
-            extraPriceRupees: o.extraPricePaise ? (o.extraPricePaise / 100).toString() : '0'
-          }))
-        }))
-      );
       setDisplayOrder(combo.displayOrder || 0);
     } else {
       setCategoryId(categories.length > 0 ? categories[0]._id : '');
@@ -50,18 +61,14 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved }) 
       setImage('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80');
       setIsVeg(true);
       setBasePriceRupees('199');
-      setOfferPriceRupees('');
-      setAvailableStock(50);
-      setIsConfigurable(false);
-      setFixedItems([{ name: 'Standard Beverage / Side', quantity: 1, notes: '' }]);
-      setCustomizationGroups([]);
+      setFixedItems([]);
       setDisplayOrder(0);
     }
+    setIsAddingNewDbItem(false);
   }, [combo, categories, isOpen]);
 
-  // Image file upload handler
   const handleImageUpload = async (e) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files[0];
     if (!file) return;
 
     const formData = new FormData();
@@ -70,7 +77,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved }) 
     try {
       setUploadingImage(true);
       const res = await api.post('/combos/admin/upload-image', formData);
-      if (res.success && res.imageUrl) {
+      if (res.imageUrl) {
         setImage(`http://localhost:5000${res.imageUrl}`);
         toast.success('Image uploaded successfully');
       }
@@ -83,7 +90,24 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved }) 
 
   // Fixed item helpers
   const addFixedItem = () => {
-    setFixedItems([...fixedItems, { name: '', quantity: 1, notes: '' }]);
+    const defaultItemName = dbItems.length > 0 ? dbItems[0].name : '';
+    const defaultNotes = dbItems.length > 0 ? (dbItems[0].defaultNotes || '') : '';
+    setFixedItems([...fixedItems, { name: defaultItemName, quantity: 1, notes: defaultNotes }]);
+  };
+
+  const handleSelectItem = (fIdx, selectedValue) => {
+    if (selectedValue === '__ADD_NEW__') {
+      setIsAddingNewDbItem(true);
+      return;
+    }
+    const matchedItem = dbItems.find(it => it.name === selectedValue);
+    const updated = [...fixedItems];
+    updated[fIdx] = {
+      ...updated[fIdx],
+      name: selectedValue,
+      notes: matchedItem?.defaultNotes || updated[fIdx].notes || ''
+    };
+    setFixedItems(updated);
   };
 
   const updateFixedItem = (idx, field, val) => {
@@ -96,57 +120,55 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved }) 
     setFixedItems(fixedItems.filter((_, i) => i !== idx));
   };
 
-  // Customization group helpers
-  const addCustomizationGroup = () => {
-    setCustomizationGroups([
-      ...customizationGroups,
-      {
-        groupName: 'Choose Your Option',
-        minSelect: 1,
-        maxSelect: 1,
-        options: [
-          { name: 'Standard Selection', extraPriceRupees: '0', isDefault: true, isVeg: true }
-        ]
+  const handleCreateDbItem = async (e) => {
+    if (e) e.preventDefault();
+    if (!newItemName.trim()) {
+      toast.error('Please enter an item name');
+      return;
+    }
+    try {
+      setSavingItem(true);
+      const res = await api.post('/items/admin', {
+        name: newItemName.trim(),
+        category: newItemCategory.trim() || 'General',
+        isVeg: newItemIsVeg,
+        defaultNotes: newItemNotes.trim()
+      });
+      if (res.success && res.item) {
+        toast.success(`"${res.item.name}" added to café database`);
+        const updatedList = [...dbItems.filter(i => i._id !== res.item._id), res.item].sort((a, b) => a.name.localeCompare(b.name));
+        setDbItems(updatedList);
+        // Automatically add to combo fixed items
+        setFixedItems(prev => [...prev, { name: res.item.name, quantity: 1, notes: res.item.defaultNotes || '' }]);
+        setNewItemName('');
+        setNewItemNotes('');
+        setIsAddingNewDbItem(false);
       }
-    ]);
-  };
-
-  const removeCustomizationGroup = (gIdx) => {
-    setCustomizationGroups(customizationGroups.filter((_, i) => i !== gIdx));
-  };
-
-  const addOptionToGroup = (gIdx) => {
-    const updated = [...customizationGroups];
-    updated[gIdx].options.push({
-      name: '',
-      extraPriceRupees: '0',
-      isDefault: false,
-      isVeg: true
-    });
-    setCustomizationGroups(updated);
-  };
-
-  const removeOptionFromGroup = (gIdx, oIdx) => {
-    const updated = [...customizationGroups];
-    updated[gIdx].options = updated[gIdx].options.filter((_, i) => i !== oIdx);
-    setCustomizationGroups(updated);
+    } catch (err) {
+      toast.error(err.message || 'Failed to save item to database');
+    } finally {
+      setSavingItem(false);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const basePaise = Math.round(parseFloat(basePriceRupees) * 100);
-    const offerPaise = offerPriceRupees ? Math.round(parseFloat(offerPriceRupees) * 100) : null;
 
     if (isNaN(basePaise) || basePaise < 0) {
-      toast.error('Please enter a valid base price in INR');
+      toast.error('Please enter a valid price in INR');
       return;
     }
 
-    if (offerPaise !== null && offerPaise > basePaise) {
-      toast.error('Offer price cannot be greater than regular base price');
-      return;
-    }
+    // Filter out any blank fixed items
+    const cleanedFixedItems = fixedItems
+      .map(fi => ({
+        name: (fi.name || '').trim(),
+        quantity: parseInt(fi.quantity, 10) || 1,
+        notes: (fi.notes || '').trim()
+      }))
+      .filter(fi => fi.name.length > 0);
 
     const payload = {
       categoryId,
@@ -155,21 +177,11 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved }) 
       image,
       isVeg,
       basePricePaise: basePaise,
-      offerPricePaise: offerPaise,
-      availableStock: parseInt(availableStock, 10),
-      isConfigurable,
-      fixedItems,
-      customizationGroups: customizationGroups.map(g => ({
-        groupName: g.groupName,
-        minSelect: parseInt(g.minSelect, 10) || 1,
-        maxSelect: parseInt(g.maxSelect, 10) || 1,
-        options: g.options.map(o => ({
-          name: o.name,
-          extraPricePaise: Math.round(parseFloat(o.extraPriceRupees || 0) * 100),
-          isDefault: !!o.isDefault,
-          isVeg: !!o.isVeg
-        }))
-      })),
+      offerPricePaise: null,
+      availableStock: combo?.availableStock !== undefined ? combo.availableStock : 999,
+      isConfigurable: false,
+      fixedItems: cleanedFixedItems,
+      customizationGroups: [],
       displayOrder: parseInt(displayOrder, 10) || 0
     };
 
@@ -195,8 +207,8 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved }) 
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={combo ? `Edit Combo: ${combo.name}` : 'Create New Combo'}
-      maxWidth="720px"
+      title={combo ? `Edit Combo: ${combo.name} (${cafeName || 'Current Café'})` : `Add New Combo to ${cafeName || 'Current Café'}`}
+      maxWidth="760px"
       footer={
         <>
           <button className="btn btn-outline" onClick={onClose} disabled={loading}>
@@ -209,20 +221,28 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved }) 
       }
     >
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        {cafeName && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.6rem',
+            padding: '0.65rem 0.9rem',
+            background: 'rgba(234, 88, 12, 0.08)',
+            border: '1px solid rgba(234, 88, 12, 0.25)',
+            borderRadius: 'var(--radius-md)',
+            color: 'var(--color-primary-dark, #c2410c)',
+            fontSize: '0.84rem',
+            fontWeight: 500
+          }}>
+            <Store size={16} style={{ flexShrink: 0 }} />
+            <span>
+              <strong>Target Café Catalog:</strong> {cafeName} — This combo is strictly isolated and will only be published to the {cafeName} menu.
+            </span>
+          </div>
+        )}
+
         {/* Basic Information */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-          <div className="form-group">
-            <label className="form-label">Combo Name *</label>
-            <input
-              type="text"
-              className="form-input"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              placeholder="e.g. Sourdough & Flat White Duo"
-            />
-          </div>
-
           <div className="form-group">
             <label className="form-label">Category *</label>
             <select
@@ -231,12 +251,25 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved }) 
               onChange={(e) => setCategoryId(e.target.value)}
               required
             >
+              <option value="">Select Category</option>
               {categories.map((c) => (
                 <option key={c._id} value={c._id}>
                   {c.name}
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Combo Name *</label>
+            <input
+              type="text"
+              className="form-input"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Executive Breakfast Panini & Latte"
+              required
+            />
           </div>
         </div>
 
@@ -252,39 +285,18 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved }) 
           />
         </div>
 
-        {/* Pricing & Stock */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '1rem' }}>
+        {/* Pricing & Dietary */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           <div className="form-group">
-            <label className="form-label">Base Price (INR) *</label>
+            <label className="form-label">Price (INR) *</label>
             <input
               type="number"
               step="0.01"
               className="form-input"
               value={basePriceRupees}
               onChange={(e) => setBasePriceRupees(e.target.value)}
+              placeholder="e.g. 199"
               required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Offer Price (INR)</label>
-            <input
-              type="number"
-              step="0.01"
-              className="form-input"
-              value={offerPriceRupees}
-              onChange={(e) => setOfferPriceRupees(e.target.value)}
-              placeholder="Optional"
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Stock Quantity</label>
-            <input
-              type="number"
-              className="form-input"
-              value={availableStock}
-              onChange={(e) => setAvailableStock(e.target.value)}
             />
           </div>
 
@@ -295,8 +307,8 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved }) 
               value={isVeg ? 'veg' : 'nonveg'}
               onChange={(e) => setIsVeg(e.target.value === 'veg')}
             >
-              <option value="veg">🟢 Vegetarian</option>
-              <option value="nonveg">🔴 Non-Vegetarian</option>
+              <option value="veg">Vegetarian (Pure Veg)</option>
+              <option value="nonveg">Non-Vegetarian</option>
             </select>
           </div>
         </div>
@@ -320,204 +332,206 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved }) 
           </div>
         </div>
 
-        {/* Fixed Items Section */}
-        <div style={{ borderTop: '1px solid var(--divider)', paddingTop: '1rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <label className="form-label" style={{ marginBottom: 0 }}>Included Fixed Items</label>
-            <button type="button" onClick={addFixedItem} className="btn btn-outline btn-sm" style={{ gap: '4px' }}>
-              <Plus size={13} />
-              <span>Add Fixed Item</span>
-            </button>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {fixedItems.map((fi, fIdx) => (
-              <div key={fIdx} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Item name (e.g. Sourdough Toast)"
-                  value={fi.name}
-                  onChange={(e) => updateFixedItem(fIdx, 'name', e.target.value)}
-                  style={{ flex: 2 }}
-                />
-                <input
-                  type="number"
-                  min="1"
-                  className="form-input"
-                  placeholder="Qty"
-                  value={fi.quantity}
-                  onChange={(e) => updateFixedItem(fIdx, 'quantity', parseInt(e.target.value, 10) || 1)}
-                  style={{ width: '70px' }}
-                />
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Notes (optional)"
-                  value={fi.notes}
-                  onChange={(e) => updateFixedItem(fIdx, 'notes', e.target.value)}
-                  style={{ flex: 1 }}
-                />
-                <button
-                  type="button"
-                  onClick={() => removeFixedItem(fIdx)}
-                  className="btn btn-ghost btn-sm"
-                  style={{ color: '#DC2626' }}
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Configurable Choices Section */}
-        <div style={{ borderTop: '1px solid var(--divider)', paddingTop: '1rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        {/* Included Fixed Items Section with Database Dropdown & Add Option */}
+        <div style={{
+          borderTop: '1px solid var(--border-light, #e2e8f0)',
+          paddingTop: '1.25rem',
+          marginTop: '0.5rem'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
             <div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 700 }}>
-                <input
-                  type="checkbox"
-                  checked={isConfigurable}
-                  onChange={(e) => setIsConfigurable(e.target.checked)}
-                />
-                <span>Enable Customer Choices (Configurable Combo)</span>
+              <label className="form-label" style={{ marginBottom: 2, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Database size={15} style={{ color: 'var(--brand-accent)' }} />
+                <span>Included Fixed Items (DB Dropdown)</span>
               </label>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Allows customers to pick their drink, sauce, or patty during ordering.
+                Select items from your café's database or create new items directly.
               </div>
             </div>
 
-            {isConfigurable && (
-              <button type="button" onClick={addCustomizationGroup} className="btn btn-outline btn-sm" style={{ gap: '4px' }}>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button
+                type="button"
+                onClick={() => setIsAddingNewDbItem(!isAddingNewDbItem)}
+                className="btn btn-outline btn-sm"
+                style={{ gap: '4px', fontSize: '0.78rem' }}
+              >
                 <Plus size={13} />
-                <span>Add Choice Group</span>
+                <span>+ Add Item to DB</span>
               </button>
-            )}
+              <button
+                type="button"
+                onClick={addFixedItem}
+                className="btn btn-primary btn-sm"
+                style={{ gap: '4px', fontSize: '0.78rem' }}
+              >
+                <Plus size={13} />
+                <span>Add Item Slot</span>
+              </button>
+            </div>
           </div>
 
-          {isConfigurable && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.75rem' }}>
-              {customizationGroups.map((g, gIdx) => (
-                <div key={gIdx} style={{
-                  background: 'var(--bg-surface-subtle)',
-                  padding: '12px',
-                  borderRadius: '10px',
-                  border: '1px solid var(--border-light)'
-                }}>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+          {/* Inline "Add New Item to DB" Form */}
+          {isAddingNewDbItem && (
+            <div style={{
+              background: 'var(--bg-surface-subtle, #f8fafc)',
+              border: '1px dashed var(--brand-accent, #ea580c)',
+              borderRadius: '8px',
+              padding: '1rem',
+              marginBottom: '1rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <strong style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}>
+                  Save New Item to Café Database
+                </strong>
+                <button
+                  type="button"
+                  onClick={() => setIsAddingNewDbItem(false)}
+                  className="btn btn-ghost btn-sm"
+                  style={{ padding: '2px 6px' }}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+                <div>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Item name (e.g. Butter Croissant)"
+                    value={newItemName}
+                    onChange={(e) => setNewItemName(e.target.value)}
+                    style={{ fontSize: '0.85rem' }}
+                  />
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Category (e.g. Bakery)"
+                    value={newItemCategory}
+                    onChange={(e) => setNewItemCategory(e.target.value)}
+                    style={{ fontSize: '0.85rem' }}
+                  />
+                </div>
+                <div>
+                  <select
+                    className="form-select"
+                    value={newItemIsVeg ? 'veg' : 'nonveg'}
+                    onChange={(e) => setNewItemIsVeg(e.target.value === 'veg')}
+                    style={{ fontSize: '0.85rem' }}
+                  >
+                    <option value="veg">🟢 Veg</option>
+                    <option value="nonveg">🔴 Non-Veg</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Default notes (e.g. Freshly baked, served warm)"
+                  value={newItemNotes}
+                  onChange={(e) => setNewItemNotes(e.target.value)}
+                  style={{ fontSize: '0.85rem', flex: 1 }}
+                />
+                <button
+                  type="button"
+                  onClick={handleCreateDbItem}
+                  disabled={savingItem}
+                  className="btn btn-primary btn-sm"
+                  style={{ gap: '4px', whiteSpace: 'nowrap' }}
+                >
+                  <Check size={14} />
+                  <span>{savingItem ? 'Saving...' : 'Save & Select'}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Fixed Items List with DB Dropdowns */}
+          {fixedItems.length === 0 ? (
+            <div style={{
+              textAlign: 'center',
+              padding: '1.25rem',
+              background: 'var(--bg-surface-subtle, #f8fafc)',
+              borderRadius: '6px',
+              color: 'var(--text-muted)',
+              fontSize: '0.85rem'
+            }}>
+              No fixed items added yet. Click <strong>"Add Item Slot"</strong> above to select items from your café database.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {fixedItems.map((fi, fIdx) => (
+                <div
+                  key={fIdx}
+                  style={{
+                    display: 'flex',
+                    gap: '8px',
+                    alignItems: 'center',
+                    background: 'var(--bg-surface-subtle, #f8fafc)',
+                    padding: '6px 10px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-light, #e2e8f0)'
+                  }}
+                >
+                  {/* Dropdown for DB items */}
+                  <select
+                    className="form-select"
+                    value={fi.name}
+                    onChange={(e) => handleSelectItem(fIdx, e.target.value)}
+                    style={{ flex: 2, fontSize: '0.85rem' }}
+                  >
+                    <option value="">-- Select Item from DB --</option>
+                    {dbItems.map((it) => (
+                      <option key={it._id} value={it.name}>
+                        {it.name} {it.isVeg ? '🟢' : '🔴'} ({it.category || 'Item'})
+                      </option>
+                    ))}
+                    {fi.name && !dbItems.some(it => it.name.toLowerCase() === fi.name.toLowerCase()) && (
+                      <option value={fi.name}>
+                        {fi.name} (Custom / Legacy)
+                      </option>
+                    )}
+                    <option value="__ADD_NEW__">➕ Add New Item to DB...</option>
+                  </select>
+
+                  {/* Quantity */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Qty:</span>
                     <input
-                      type="text"
+                      type="number"
+                      min="1"
                       className="form-input"
-                      value={g.groupName}
-                      onChange={(e) => {
-                        const upd = [...customizationGroups];
-                        upd[gIdx].groupName = e.target.value;
-                        setCustomizationGroups(upd);
-                      }}
-                      placeholder="Group Title (e.g. Choose Beverage)"
-                      style={{ flex: 1, fontWeight: 700 }}
+                      value={fi.quantity}
+                      onChange={(e) => updateFixedItem(fIdx, 'quantity', parseInt(e.target.value, 10) || 1)}
+                      style={{ width: '65px', fontSize: '0.85rem', textAlign: 'center' }}
                     />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem' }}>
-                      <span>Min:</span>
-                      <input
-                        type="number"
-                        min="0"
-                        className="form-input"
-                        style={{ width: '55px', padding: '4px 6px' }}
-                        value={g.minSelect}
-                        onChange={(e) => {
-                          const upd = [...customizationGroups];
-                          upd[gIdx].minSelect = parseInt(e.target.value, 10) || 0;
-                          setCustomizationGroups(upd);
-                        }}
-                      />
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem' }}>
-                      <span>Max:</span>
-                      <input
-                        type="number"
-                        min="1"
-                        className="form-input"
-                        style={{ width: '55px', padding: '4px 6px' }}
-                        value={g.maxSelect}
-                        onChange={(e) => {
-                          const upd = [...customizationGroups];
-                          upd[gIdx].maxSelect = parseInt(e.target.value, 10) || 1;
-                          setCustomizationGroups(upd);
-                        }}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeCustomizationGroup(gIdx)}
-                      className="btn btn-ghost btn-sm"
-                      style={{ color: '#DC2626' }}
-                    >
-                      <Trash2 size={15} />
-                    </button>
                   </div>
 
-                  {/* Options List */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', paddingLeft: '8px' }}>
-                    {g.options.map((opt, oIdx) => (
-                      <div key={oIdx} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                        <input
-                          type="text"
-                          className="form-input"
-                          placeholder="Option Name (e.g. Vietnamese Cold Brew)"
-                          value={opt.name}
-                          onChange={(e) => {
-                            const upd = [...customizationGroups];
-                            upd[gIdx].options[oIdx].name = e.target.value;
-                            setCustomizationGroups(upd);
-                          }}
-                          style={{ flex: 2 }}
-                        />
-                        <input
-                          type="number"
-                          step="0.01"
-                          className="form-input"
-                          placeholder="Extra INR"
-                          value={opt.extraPriceRupees}
-                          onChange={(e) => {
-                            const upd = [...customizationGroups];
-                            upd[gIdx].options[oIdx].extraPriceRupees = e.target.value;
-                            setCustomizationGroups(upd);
-                          }}
-                          style={{ width: '90px' }}
-                        />
-                        <label style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-                          <input
-                            type="checkbox"
-                            checked={opt.isDefault}
-                            onChange={(e) => {
-                              const upd = [...customizationGroups];
-                              upd[gIdx].options[oIdx].isDefault = e.target.checked;
-                              setCustomizationGroups(upd);
-                            }}
-                          />
-                          <span>Default</span>
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => removeOptionFromGroup(gIdx, oIdx)}
-                          className="btn btn-ghost btn-sm"
-                          style={{ color: '#DC2626', padding: '4px' }}
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => addOptionToGroup(gIdx)}
-                      className="btn btn-ghost btn-sm"
-                      style={{ alignSelf: 'flex-start', fontSize: '0.75rem', color: 'var(--brand-accent)' }}
-                    >
-                      + Add Option Choice
-                    </button>
-                  </div>
+                  {/* Notes */}
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Notes (e.g. Crispy)"
+                    value={fi.notes}
+                    onChange={(e) => updateFixedItem(fIdx, 'notes', e.target.value)}
+                    style={{ flex: 1, fontSize: '0.85rem' }}
+                  />
+
+                  {/* Remove */}
+                  <button
+                    type="button"
+                    onClick={() => removeFixedItem(fIdx)}
+                    className="btn btn-ghost btn-sm"
+                    style={{ color: '#DC2626', padding: '4px 6px' }}
+                    title="Remove item"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               ))}
             </div>

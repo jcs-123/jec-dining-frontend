@@ -18,7 +18,7 @@ export const PaymentPage = () => {
   const [errorMessage, setErrorMessage] = useState('');
 
   // Sandbox simulated inputs
-  const [cardHolder, setCardHolder] = useState('Rahul Sharma');
+  const [cardHolder, setCardHolder] = useState('CAMPUS DINER');
   const [cardNumber, setCardNumber] = useState('4532 •••• •••• 8890');
   const [cardExpiry, setCardExpiry] = useState('08/29');
 
@@ -26,7 +26,11 @@ export const PaymentPage = () => {
     try {
       const stored = sessionStorage.getItem('active_payment_data');
       if (stored) {
-        setPaymentData(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        setPaymentData(parsed);
+        if (parsed?.order?.customerName) {
+          setCardHolder(parsed.order.customerName.toUpperCase());
+        }
       } else {
         // Fallback: fetch order details
         navigate('/my-orders');

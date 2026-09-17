@@ -5,7 +5,14 @@ const CafeContext = createContext(null);
 
 export const CafeProvider = ({ children }) => {
   const [cafes, setCafes] = useState([]);
-  const [currentCafe, setCurrentCafe] = useState(null);
+  const [currentCafe, setCurrentCafe] = useState(() => {
+    try {
+      const saved = localStorage.getItem('jec_active_cafe');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(true);
 
   const fetchCafes = async () => {
@@ -14,6 +21,25 @@ export const CafeProvider = ({ children }) => {
       const res = await api.get('/cafes');
       if (res.success && res.cafes) {
         setCafes(res.cafes);
+
+        // Auto-detect active cafe from URL or storage
+        const pathSlug = window.location.pathname.replace(/^\//, '').split('/')[0].toLowerCase();
+        let target = null;
+        if (pathSlug === 'jeccafe' || pathSlug === 'jec-bytest') {
+          target = res.cafes.find(c => c.slug === pathSlug);
+        }
+        if (!target && currentCafe) {
+          target = res.cafes.find(c => c.slug === currentCafe.slug);
+        }
+        if (!target && res.cafes.length > 0) {
+          target = res.cafes[0];
+        }
+
+        if (target) {
+          setCurrentCafe(target);
+          localStorage.setItem('jec_active_cafe', JSON.stringify(target));
+          document.documentElement.setAttribute('data-theme', target.slug);
+        }
       }
     } catch (err) {
       console.error('Failed to fetch cafes:', err);
@@ -26,19 +52,29 @@ export const CafeProvider = ({ children }) => {
     fetchCafes();
   }, []);
 
-  const selectCafeBySlug = (slug) => {
+  const selectCafeBySlug = (slug, list = cafes) => {
     if (!slug) {
       setCurrentCafe(null);
       document.documentElement.removeAttribute('data-theme');
       return null;
     }
-    const found = cafes.find(c => c.slug === slug.toLowerCase());
+    const targetSlug = slug.toLowerCase();
+    const sourceList = list && list.length > 0 ? list : cafes;
+    const found = sourceList.find(c => c.slug === targetSlug);
     if (found) {
       setCurrentCafe(found);
+      localStorage.setItem('jec_active_cafe', JSON.stringify(found));
       document.documentElement.setAttribute('data-theme', found.slug);
       return found;
     }
-    return null;
+    // Fallback stub if cafes list hasn't resolved yet
+    const fallback = {
+      slug: targetSlug,
+      name: targetSlug === 'jeccafe' ? 'JECCAFE' : 'JEC BYTES'
+    };
+    setCurrentCafe(fallback);
+    document.documentElement.setAttribute('data-theme', targetSlug);
+    return fallback;
   };
 
   return (

@@ -4,6 +4,7 @@ import { api } from '../../services/api';
 import { formatINR, formatKolkataTime, getStatusBadgeClass } from '../../utils/formatters';
 import { AdminHeader } from '../../components/admin/AdminHeader';
 import { StatusTransitionModal } from '../../components/admin/StatusTransitionModal';
+import { AdminReceiptModal } from '../../components/admin/AdminReceiptModal';
 import {
   DollarSign,
   ShoppingBag,
@@ -26,6 +27,7 @@ export const AdminDashboardPage = () => {
   const [liveOrders, setLiveOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrderForStatus, setSelectedOrderForStatus] = useState(null);
+  const [selectedReceiptOrder, setSelectedReceiptOrder] = useState(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -54,8 +56,8 @@ export const AdminDashboardPage = () => {
     }
   };
 
-  const handlePrintReceipt = (orderId) => {
-    window.open(`http://localhost:5000/api/orders/${orderId}/receipt`, '_blank');
+  const handlePrintReceipt = (order) => {
+    setSelectedReceiptOrder(order);
   };
 
   const summary = report?.summary || {
@@ -244,11 +246,21 @@ export const AdminDashboardPage = () => {
                             Update
                           </button>
                           <button
-                            onClick={() => handlePrintReceipt(o._id)}
+                            onClick={() => handlePrintReceipt(o)}
                             className="btn btn-outline btn-sm"
-                            title="Print Receipt"
+                            title="Generate & Print Official Receipt / Bill"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              borderColor: '#EADBCC',
+                              color: '#D66C3E',
+                              background: '#FFFDF9',
+                              fontWeight: 700
+                            }}
                           >
                             <Printer size={14} />
+                            <span>Bill</span>
                           </button>
                         </div>
                       </td>
@@ -267,6 +279,14 @@ export const AdminDashboardPage = () => {
         onClose={() => setSelectedOrderForStatus(null)}
         order={selectedOrderForStatus}
         onOrderUpdated={loadDashboardData}
+      />
+
+      {/* Premium Receipt Modal */}
+      <AdminReceiptModal
+        isOpen={!!selectedReceiptOrder}
+        onClose={() => setSelectedReceiptOrder(null)}
+        order={selectedReceiptOrder}
+        cafe={user?.cafe}
       />
     </div>
   );

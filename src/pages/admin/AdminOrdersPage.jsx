@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import { api } from '../../services/api';
 import { formatINR, formatKolkataTime, getStatusBadgeClass } from '../../utils/formatters';
 import { AdminHeader } from '../../components/admin/AdminHeader';
 import { StatusTransitionModal } from '../../components/admin/StatusTransitionModal';
-import { Search, Filter, Printer, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { AdminReceiptModal } from '../../components/admin/AdminReceiptModal';
+import { Search, Filter, Printer, RefreshCw, ChevronLeft, ChevronRight, CheckCircle2, QrCode } from 'lucide-react';
 
 export const AdminOrdersPage = () => {
   const { user } = useAuth();
+  const toast = useToast();
   const [orders, setOrders] = useState([]);
   const [totalOrders, setTotalOrders] = useState(0);
   const [page, setPage] = useState(1);
@@ -20,6 +23,7 @@ export const AdminOrdersPage = () => {
   const [paymentStatus, setPaymentStatus] = useState('all');
   const [dateFilter, setDateFilter] = useState('all'); // 'all', 'today'
   const [selectedOrderForStatus, setSelectedOrderForStatus] = useState(null);
+  const [selectedReceiptOrder, setSelectedReceiptOrder] = useState(null);
 
   useEffect(() => {
     loadOrders();
@@ -57,8 +61,25 @@ export const AdminOrdersPage = () => {
     loadOrders();
   };
 
-  const handlePrintReceipt = (orderId) => {
-    window.open(`http://localhost:5000/api/orders/${orderId}/receipt`, '_blank');
+  const handlePrintReceipt = (order) => {
+    setSelectedReceiptOrder(order);
+  };
+
+  const handleQuickDeliver = async (orderId, orderNum) => {
+    if (!window.confirm(`Confirm pickup & mark Order #${orderNum} as Delivered / Completed?`)) {
+      return;
+    }
+    try {
+      const res = await api.post(`/orders/admin/${orderId}/verify-pickup`, {});
+      if (res.success) {
+        toast.showSuccess(`Order #${orderNum} marked as Completed & Delivered!`);
+        loadOrders();
+      } else {
+        toast.showError(res.message || 'Failed to update order');
+      }
+    } catch (err) {
+      toast.showError(err.message || 'Error marking order as delivered');
+    }
   };
 
   return (
@@ -169,6 +190,7 @@ export const AdminOrdersPage = () => {
                     <th>Order #</th>
                     <th>Placed At (IST)</th>
                     <th>Customer Name & Phone</th>
+                    <th>Pickup Schedule</th>
                     <th>Items Purchased</th>
                     <th>Total</th>
                     <th>Payment</th>
@@ -188,6 +210,12 @@ export const AdminOrdersPage = () => {
                         <div style={{ fontWeight: 600 }}>{o.customerSnapshot?.name}</div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                           {o.customerSnapshot?.phone || 'No phone'}
+                        </div>
+                      </td>
+                      <td style={{ fontSize: '0.85rem' }}>
+                        <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>{o.pickupDate || 'Today'}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--brand-accent)', fontWeight: 600 }}>
+                          {o.pickupTimeSlot || 'Immediate'}
                         </div>
                       </td>
                       <td style={{ fontSize: '0.85rem' }}>
@@ -217,7 +245,27 @@ export const AdminOrdersPage = () => {
                         {o.orderNotes || '-'}
                       </td>
                       <td style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                          {o.orderStatus !== 'Completed' && o.orderStatus !== 'Cancelled' && (
+                            <button
+                              onClick={() => handleQuickDeliver(o._id, o.orderNumber)}
+                              className="btn btn-sm"
+                              style={{
+                                background: '#10B981',
+                                color: '#fff',
+                                borderColor: '#10B981',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                fontWeight: 600,
+                                padding: '4px 10px'
+                              }}
+                              title="Confirm Pickup & Deliver"
+                            >
+                              <CheckCircle2 size={13} />
+                              <span>Deliver</span>
+                            </button>
+                          )}
                           <button
                             onClick={() => setSelectedOrderForStatus(o)}
                             className="btn btn-primary btn-sm"
@@ -225,11 +273,21 @@ export const AdminOrdersPage = () => {
                             Update
                           </button>
                           <button
-                            onClick={() => handlePrintReceipt(o._id)}
+                            onClick={() => handlePrintReceipt(o)}
                             className="btn btn-outline btn-sm"
-                            title="Print Receipt"
+                            title="Generate & Print Official Receipt / Bill"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              borderColor: '#EADBCC',
+                              color: '#D66C3E',
+                              background: '#FFFDF9',
+                              fontWeight: 700
+                            }}
                           >
                             <Printer size={14} />
+                            <span>Bill</span>
                           </button>
                         </div>
                       </td>
@@ -279,6 +337,13 @@ export const AdminOrdersPage = () => {
         onClose={() => setSelectedOrderForStatus(null)}
         order={selectedOrderForStatus}
         onOrderUpdated={loadOrders}
+      />
+
+      <AdminReceiptModal
+        isOpen={!!selectedReceiptOrder}
+        onClose={() => setSelectedReceiptOrder(null)}
+        order={selectedReceiptOrder}
+        cafe={user?.cafe}
       />
     </div>
   );
