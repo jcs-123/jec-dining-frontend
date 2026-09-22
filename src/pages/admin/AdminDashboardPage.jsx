@@ -6,48 +6,58 @@ import { AdminHeader } from '../../components/admin/AdminHeader';
 import { StatusTransitionModal } from '../../components/admin/StatusTransitionModal';
 import { AdminReceiptModal } from '../../components/admin/AdminReceiptModal';
 import {
-  DollarSign,
   ShoppingBag,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  Plus,
-  BarChart3,
   RefreshCw,
   Printer,
-  ChevronRight
+  ChevronRight,
+  UtensilsCrossed,
+  TrendingUp,
+  Calendar
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const AdminDashboardPage = () => {
   const { user } = useAuth();
   const cafeSlug = user?.cafe?.slug || 'jeccafe';
+  const cafeName = user?.cafe?.name || 'JECCAFE';
 
-  const [report, setReport] = useState(null);
-  const [liveOrders, setLiveOrders] = useState([]);
+  const [allTimeReport, setAllTimeReport] = useState(null);
+  const [todayReport, setTodayReport] = useState(null);
+  const [comboCount, setComboCount] = useState(0);
+  const [todayOrders, setTodayOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrderForStatus, setSelectedOrderForStatus] = useState(null);
   const [selectedReceiptOrder, setSelectedReceiptOrder] = useState(null);
 
   useEffect(() => {
     loadDashboardData();
-    const interval = setInterval(loadDashboardData, 12000); // Live polling every 12 seconds
+    const interval = setInterval(loadDashboardData, 12000); // Auto-poll every 12 seconds
     return () => clearInterval(interval);
   }, []);
 
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const [reportRes, ordersRes] = await Promise.all([
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      const [allTimeRes, todayRes, combosRes, ordersRes] = await Promise.all([
         api.get('/reports/sales'),
-        api.get('/orders/admin/list?isToday=true&limit=10')
+        api.get(`/reports/sales?startDate=${todayStr}`),
+        api.get('/combos/admin/list'),
+        api.get('/orders/admin/list?isToday=true&limit=50')
       ]);
 
-      if (reportRes.success && reportRes.report) {
-        setReport(reportRes.report);
+      if (allTimeRes.success && allTimeRes.report) {
+        setAllTimeReport(allTimeRes.report);
+      }
+      if (todayRes.success && todayRes.report) {
+        setTodayReport(todayRes.report);
+      }
+      if (combosRes.success && combosRes.combos) {
+        setComboCount(combosRes.combos.length);
       }
       if (ordersRes.success && ordersRes.orders) {
-        setLiveOrders(ordersRes.orders);
+        setTodayOrders(ordersRes.orders);
       }
     } catch (err) {
       console.error('Failed to load admin dashboard:', err);
@@ -60,140 +70,209 @@ export const AdminDashboardPage = () => {
     setSelectedReceiptOrder(order);
   };
 
-  const summary = report?.summary || {
+  const todaySummary = todayReport?.summary || {
     grossCollectedPaise: 0,
     netCollectedPaise: 0,
     totalOrders: 0,
     paidOrders: 0,
-    pendingPayments: 0,
     completedOrders: 0,
     cancelledOrders: 0
   };
 
+  const allTimeSummary = allTimeReport?.summary || {
+    grossCollectedPaise: 0,
+    netCollectedPaise: 0,
+    totalOrders: 0,
+    paidOrders: 0,
+    completedOrders: 0,
+    cancelledOrders: 0
+  };
+
+  const todayDateFormatted = new Date().toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+
   return (
     <div>
+      {/* Top Header */}
       <AdminHeader
         title="Dashboard Overview"
-        subtitle={`Live monitoring & performance analytics for ${user?.cafe?.name}`}
-        actions={
-          <button onClick={loadDashboardData} className="btn btn-outline btn-sm" style={{ gap: '6px' }}>
-            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-            <span>Refresh</span>
-          </button>
-        }
+        subtitle={`Live performance metrics & today's orders for ${cafeName}`}
       />
 
-      <div style={{ padding: '2rem' }}>
-        {/* KPI Summary Cards */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: '1.25rem',
-          marginBottom: '2rem'
-        }}>
-          {/* Revenue Card */}
-          <div className="card" style={{ padding: '1.25rem', borderLeft: '4px solid var(--brand-accent)' }}>
+      <div className="admin-page-container">
+        {/* 1. Four Specific Requested KPI Cards */}
+        <div className="admin-kpi-grid">
+          {/* Card 1: Today's Order Amount */}
+          <div className="kpi-card kpi-orange">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>GROSS COLLECTED (PAID)</div>
-                <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-main)', marginTop: '4px' }}>
-                  {formatINR(summary.grossCollectedPaise)}
+                <div style={{ fontSize: '0.74rem', color: '#7A6E63', fontWeight: 700, letterSpacing: '0.04em' }}>
+                  TODAY'S ORDER AMOUNT
+                </div>
+                <div style={{
+                  fontSize: 'clamp(1.4rem, 2.2vw, 1.8rem)',
+                  fontWeight: 800,
+                  color: '#1E140E',
+                  marginTop: '4px',
+                  fontFamily: "'Fraunces', Georgia, serif"
+                }}>
+                  {formatINR(todaySummary.grossCollectedPaise)}
                 </div>
               </div>
-              <div style={{ background: 'var(--brand-accent-light)', color: 'var(--brand-accent)', padding: '8px', borderRadius: '10px' }}>
-                <DollarSign size={20} />
+              <div className="kpi-icon-wrap">
+                <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>₹</span>
               </div>
             </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>
-              From {summary.paidOrders} confirmed paid orders
+            <div style={{ fontSize: '0.73rem', color: '#8C7E74', marginTop: '8px' }}>
+              From {todaySummary.paidOrders} paid orders today ({todayDateFormatted})
             </div>
           </div>
 
-          {/* Total Orders */}
-          <div className="card" style={{ padding: '1.25rem', borderLeft: '4px solid #2563EB' }}>
+          {/* Card 2: Total Amount */}
+          <div className="kpi-card kpi-green">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>TOTAL ORDERS TODAY</div>
-                <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-main)', marginTop: '4px' }}>
-                  {summary.totalOrders}
+                <div style={{ fontSize: '0.74rem', color: '#7A6E63', fontWeight: 700, letterSpacing: '0.04em' }}>
+                  TOTAL AMOUNT (LIFETIME)
+                </div>
+                <div style={{
+                  fontSize: 'clamp(1.4rem, 2.2vw, 1.8rem)',
+                  fontWeight: 800,
+                  color: '#16A34A',
+                  marginTop: '4px',
+                  fontFamily: "'Fraunces', Georgia, serif"
+                }}>
+                  {formatINR(allTimeSummary.grossCollectedPaise)}
                 </div>
               </div>
-              <div style={{ background: '#DBEAFE', color: '#2563EB', padding: '8px', borderRadius: '10px' }}>
+              <div className="kpi-icon-wrap">
+                <TrendingUp size={20} />
+              </div>
+            </div>
+            <div style={{ fontSize: '0.73rem', color: '#8C7E74', marginTop: '8px' }}>
+              Lifetime collected across all {allTimeSummary.paidOrders} paid orders
+            </div>
+          </div>
+
+          {/* Card 3: Total Order Count */}
+          <div className="kpi-card kpi-blue">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <div style={{ fontSize: '0.74rem', color: '#7A6E63', fontWeight: 700, letterSpacing: '0.04em' }}>
+                  TOTAL ORDER COUNT
+                </div>
+                <div style={{
+                  fontSize: 'clamp(1.4rem, 2.2vw, 1.8rem)',
+                  fontWeight: 800,
+                  color: '#1E140E',
+                  marginTop: '4px',
+                  fontFamily: "'Fraunces', Georgia, serif"
+                }}>
+                  {allTimeSummary.totalOrders}
+                </div>
+              </div>
+              <div className="kpi-icon-wrap">
                 <ShoppingBag size={20} />
               </div>
             </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>
-              {summary.completedOrders} completed • {summary.cancelledOrders} cancelled
+            <div style={{ fontSize: '0.73rem', color: '#8C7E74', marginTop: '8px' }}>
+              {todaySummary.totalOrders} placed today • {allTimeSummary.completedOrders} completed
             </div>
           </div>
 
-          {/* Pending Queue */}
-          <div className="card" style={{ padding: '1.25rem', borderLeft: '4px solid #D97706' }}>
+          {/* Card 4: Total Combo Count */}
+          <div className="kpi-card kpi-amber">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>ACTIVE / PENDING</div>
-                <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-main)', marginTop: '4px' }}>
-                  {liveOrders.filter(o => ['Pending', 'Accepted', 'Preparing', 'Ready for Pickup'].includes(o.orderStatus)).length}
+                <div style={{ fontSize: '0.74rem', color: '#7A6E63', fontWeight: 700, letterSpacing: '0.04em' }}>
+                  TOTAL COMBO COUNT
+                </div>
+                <div style={{
+                  fontSize: 'clamp(1.4rem, 2.2vw, 1.8rem)',
+                  fontWeight: 800,
+                  color: '#1E140E',
+                  marginTop: '4px',
+                  fontFamily: "'Fraunces', Georgia, serif"
+                }}>
+                  {comboCount}
                 </div>
               </div>
-              <div style={{ background: '#FEF3C7', color: '#D97706', padding: '8px', borderRadius: '10px' }}>
-                <Clock size={20} />
+              <div className="kpi-icon-wrap">
+                <UtensilsCrossed size={20} />
               </div>
             </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>
-              Requires kitchen or counter attention
-            </div>
-          </div>
-
-          {/* Net Collected */}
-          <div className="card" style={{ padding: '1.25rem', borderLeft: '4px solid #16A34A' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>NET REVENUE</div>
-                <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#16A34A', marginTop: '4px' }}>
-                  {formatINR(summary.netCollectedPaise)}
-                </div>
-              </div>
-              <div style={{ background: '#DCFCE7', color: '#16A34A', padding: '8px', borderRadius: '10px' }}>
-                <CheckCircle2 size={20} />
-              </div>
-            </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>
-              Refunds deducted: {formatINR(summary.refundedAmountPaise)}
+            <div style={{ fontSize: '0.73rem', color: '#8C7E74', marginTop: '8px' }}>
+              Active and configured combos in {cafeName} catalog
             </div>
           </div>
         </div>
 
-        {/* Live Orders Table */}
-        <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '1.25rem'
-          }}>
-            <div>
-              <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)' }}>
-                Live Kitchen & Counter Order Queue
-              </h2>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                Orders placed today for {user?.cafe?.name} (Auto-polling every 12s)
+        {/* 2. Today's Date Orders Show Table */}
+        <div className="order-queue-card">
+          <div className="order-queue-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                background: '#FDF1EA',
+                color: '#D66C3E',
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <Calendar size={18} />
+              </div>
+              <div>
+                <h2 style={{
+                  fontSize: '1.05rem',
+                  fontWeight: 800,
+                  color: '#1E140E',
+                  margin: 0
+                }}>
+                  Today's Orders ({todayDateFormatted})
+                </h2>
+                <div style={{ fontSize: '0.75rem', color: '#7A6E63', marginTop: '2px' }}>
+                  {todayOrders.length} {todayOrders.length === 1 ? 'order' : 'orders'} placed today for {cafeName}
+                </div>
               </div>
             </div>
 
-            <Link to={`/${cafeSlug}/admin/orders`} className="btn btn-outline btn-sm" style={{ gap: '6px' }}>
+            <Link
+              to={`/${cafeSlug}/admin/orders`}
+              className="btn btn-outline btn-sm"
+              style={{
+                gap: '5px',
+                borderColor: '#EADBCC',
+                background: '#FFFDF9',
+                color: '#382A20',
+                borderRadius: '10px',
+                fontSize: '0.8rem',
+                fontWeight: 700
+              }}
+            >
               <span>View All Orders</span>
               <ChevronRight size={14} />
             </Link>
           </div>
 
-          {liveOrders.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
-              No orders recorded for today yet.
+          {todayOrders.length === 0 ? (
+            <div style={{
+              padding: '2.5rem 1.5rem',
+              textAlign: 'center',
+              color: '#7A6E63',
+              fontSize: '0.88rem',
+              fontWeight: 500
+            }}>
+              No orders recorded for today ({todayDateFormatted}) yet. New orders will appear here automatically.
             </div>
           ) : (
-            <div className="table-responsive">
-              <table className="data-table">
+            <div className="table-responsive" style={{ display: 'block', margin: 0 }}>
+              <table className="data-table" style={{ width: '100%' }}>
                 <thead>
                   <tr>
                     <th>Order #</th>
@@ -207,19 +286,19 @@ export const AdminDashboardPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {liveOrders.map((o) => (
+                  {todayOrders.map((o) => (
                     <tr key={o._id}>
-                      <td style={{ fontWeight: 800 }}>#{o.orderNumber}</td>
-                      <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      <td style={{ fontWeight: 800, color: '#D66C3E' }}>#{o.orderNumber}</td>
+                      <td style={{ fontSize: '0.8rem', color: '#7A6E63' }}>
                         {formatKolkataTime(o.createdAt)}
                       </td>
                       <td>
                         <div style={{ fontWeight: 600 }}>{o.customerSnapshot?.name}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        <div style={{ fontSize: '0.74rem', color: '#7A6E63' }}>
                           {o.customerSnapshot?.phone || 'N/A'}
                         </div>
                       </td>
-                      <td style={{ fontSize: '0.85rem' }}>
+                      <td style={{ fontSize: '0.84rem' }}>
                         {o.items.map((i, idx) => (
                           <div key={idx}>
                             <strong>{i.quantity}x</strong> {i.name}
@@ -242,24 +321,28 @@ export const AdminDashboardPage = () => {
                           <button
                             onClick={() => setSelectedOrderForStatus(o)}
                             className="btn btn-primary btn-sm"
+                            style={{ borderRadius: '8px', padding: '4px 10px', fontSize: '0.78rem' }}
                           >
                             Update
                           </button>
                           <button
                             onClick={() => handlePrintReceipt(o)}
                             className="btn btn-outline btn-sm"
-                            title="Generate & Print Official Receipt / Bill"
+                            title="Generate & Print Receipt"
                             style={{
                               display: 'inline-flex',
                               alignItems: 'center',
-                              gap: '5px',
+                              gap: '4px',
                               borderColor: '#EADBCC',
                               color: '#D66C3E',
                               background: '#FFFDF9',
-                              fontWeight: 700
+                              fontWeight: 700,
+                              borderRadius: '8px',
+                              padding: '4px 10px',
+                              fontSize: '0.78rem'
                             }}
                           >
-                            <Printer size={14} />
+                            <Printer size={13} />
                             <span>Bill</span>
                           </button>
                         </div>

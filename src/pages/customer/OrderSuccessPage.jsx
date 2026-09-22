@@ -61,8 +61,8 @@ export const OrderSuccessPage = () => {
     );
   }
 
-  const qrVerificationData = `http://localhost:5173/admin/verify-pickup/${order._id}`;
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrVerificationData)}`;
+  const qrVerificationData = `${window.location.origin}/admin/verify-pickup/${order._id}`;
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrVerificationData)}`;
 
   return (
     <div className="app-container" style={{ maxWidth: '680px', padding: '2rem 1rem' }}>

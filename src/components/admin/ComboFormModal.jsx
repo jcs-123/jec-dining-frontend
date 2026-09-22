@@ -422,8 +422,8 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
                     onChange={(e) => setNewItemIsVeg(e.target.value === 'veg')}
                     style={{ fontSize: '0.85rem' }}
                   >
-                    <option value="veg">🟢 Veg</option>
-                    <option value="nonveg">🔴 Non-Veg</option>
+                    <option value="veg">Veg</option>
+                    <option value="nonveg">Non-Veg</option>
                   </select>
                 </div>
               </div>
@@ -488,7 +488,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
                     <option value="">-- Select Item from DB --</option>
                     {dbItems.map((it) => (
                       <option key={it._id} value={it.name}>
-                        {it.name} {it.isVeg ? '🟢' : '🔴'} ({it.category || 'Item'})
+                        {it.name} {it.isVeg ? '(Veg)' : '(Non-Veg)'} ({it.category || 'Item'})
                       </option>
                     ))}
                     {fi.name && !dbItems.some(it => it.name.toLowerCase() === fi.name.toLowerCase()) && (
@@ -496,7 +496,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
                         {fi.name} (Custom / Legacy)
                       </option>
                     )}
-                    <option value="__ADD_NEW__">➕ Add New Item to DB...</option>
+                    <option value="__ADD_NEW__">+ Add New Item to Database...</option>
                   </select>
 
                   {/* Quantity */}

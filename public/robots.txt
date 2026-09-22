@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 Allow: /jeccafe
-Allow: /jec-bytest
+Allow: /jecbytes
 Allow: /combos/*
 
 # Disallow private and administrative paths

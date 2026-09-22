@@ -14,7 +14,8 @@ import {
   Search,
   Filter,
   Layers,
-  UtensilsCrossed
+  UtensilsCrossed,
+  Flame
 } from 'lucide-react';
 
 export const AdminReportsPage = () => {
@@ -132,7 +133,7 @@ export const AdminReportsPage = () => {
         }
       />
 
-      <div style={{ padding: '2rem' }}>
+      <div className="admin-page-container">
         {/* Report Filter Header */}
         <div className="card" style={{ padding: '1.25rem', marginBottom: '2rem' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -269,12 +270,7 @@ export const AdminReportsPage = () => {
         </div>
 
         {/* 8 Financial Summary Cards */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '1rem',
-          marginBottom: '2rem'
-        }}>
+        <div className="admin-reports-grid" style={{ marginBottom: '2rem' }}>
           <div className="card" style={{ padding: '1.25rem', borderTop: '4px solid var(--brand-accent)' }}>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>GROSS COLLECTED</div>
             <div style={{ fontSize: '1.4rem', fontWeight: 800, marginTop: '4px', color: 'var(--text-main)' }}>
@@ -465,7 +461,11 @@ export const AdminReportsPage = () => {
                           color: item.todayCount > 0 ? '#C2410C' : 'var(--text-muted)',
                           border: item.todayCount > 0 ? '1px solid rgba(234, 88, 12, 0.3)' : 'none'
                         }}>
-                          {item.todayCount > 0 ? `🔥 ${item.todayCount} units` : '0 units'}
+                          {item.todayCount > 0 ? (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <Flame size={13} style={{ color: '#C2410C' }} /> {item.todayCount} units
+                            </span>
+                          ) : '0 units'}
                         </span>
                       </td>
                       <td style={{ textAlign: 'center' }}>

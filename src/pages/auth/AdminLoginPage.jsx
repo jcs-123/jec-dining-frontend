@@ -3,17 +3,27 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCafe } from '../../context/CafeContext';
 import { useToast } from '../../context/ToastContext';
-import { Lock, Mail, ArrowRight, Coffee, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, ArrowRight, Coffee, Zap, Eye, EyeOff } from 'lucide-react';
 
 export const AdminLoginPage = () => {
   const { cafeSlug: paramSlug } = useParams();
   const pathSlug = window.location.pathname.replace(/^\//, '').split('/')[0].toLowerCase();
-  const cafeSlug = paramSlug || (pathSlug === 'jec-bytest' ? 'jec-bytest' : 'jeccafe');
+
+  // Detect if requested URL points to JEC Bytes or JECCAFE
+  const isByteUrl = (paramSlug && paramSlug.includes('byte')) || pathSlug.includes('byte');
+  const [selectedCafe, setSelectedCafe] = useState(isByteUrl ? 'jecbytes' : 'jeccafe');
 
   const { loginAdmin } = useAuth();
   const { selectCafeBySlug } = useCafe();
   const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
+
+  const isJeccafe = selectedCafe === 'jeccafe';
+  const cafeName = isJeccafe ? 'JECCAFE' : 'JEC BYTES';
+  const primaryBrandColor = isJeccafe ? '#9C5B32' : '#0284C7';
+  const badgeBg = isJeccafe ? '#FDF1EB' : '#E0F2FE';
+  const badgeBorder = isJeccafe ? '#F0DAC9' : '#BAE6FD';
+  const badgeText = isJeccafe ? '#8B4822' : '#0369A1';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,23 +31,19 @@ export const AdminLoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const isJeccafe = cafeSlug === 'jeccafe';
-  const cafeName = isJeccafe ? 'JECCAFE' : 'JEC BYTES';
-
+  // Sync cafe context and theme whenever route changes
   useEffect(() => {
-    if (cafeSlug) {
-      selectCafeBySlug(cafeSlug);
-    }
-  }, [cafeSlug]);
+    selectCafeBySlug(selectedCafe);
+  }, [selectedCafe]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
     try {
       setLoading(true);
-      await loginAdmin(email, password, cafeSlug);
+      await loginAdmin(email, password, selectedCafe);
       showSuccess(`Welcome! Authenticated as ${cafeName} Administrator`);
-      navigate(`/${cafeSlug}/admin/dashboard`, { replace: true });
+      navigate(`/${selectedCafe}/admin/dashboard`, { replace: true });
     } catch (err) {
       const msg = err.message || 'Invalid administrator credentials';
       setErrorMsg(msg);
@@ -51,16 +57,19 @@ export const AdminLoginPage = () => {
     <div
       style={{
         minHeight: '100vh',
-        background: 'radial-gradient(circle at 80% 12%, #FFF9F0 0%, #FAF5ED 50%, #F4ECE0 100%)',
+        background: isJeccafe
+          ? 'radial-gradient(circle at 80% 12%, #FFF9F0 0%, #FAF5ED 50%, #F4ECE0 100%)'
+          : 'radial-gradient(circle at 80% 12%, #F0F9FF 0%, #F8FAFC 50%, #EDF4FB 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '2.5rem 1.25rem'
+        padding: '2.5rem 1.25rem',
+        transition: 'background 0.3s ease'
       }}
     >
       <div
         style={{
-          maxWidth: '465px',
+          maxWidth: '480px',
           width: '100%',
           position: 'relative',
           background: 'linear-gradient(175deg, #FFFDF9 0%, #FAF5ED 55%, #F6EDE2 100%)',
@@ -85,7 +94,7 @@ export const AdminLoginPage = () => {
             style={{
               fontFamily: "'Caveat', cursive",
               fontSize: '1.24rem',
-              color: '#9C5B32',
+              color: primaryBrandColor,
               fontWeight: 600,
               transform: 'rotate(-4deg)',
               lineHeight: 1.15
@@ -93,14 +102,14 @@ export const AdminLoginPage = () => {
           >
             Admin Panel<br />
             Manager Desk
-            <div style={{ width: '44px', height: '2px', background: '#9C5B32', margin: '3px 0 4px auto', borderRadius: '2px', opacity: 0.8 }} />
+            <div style={{ width: '44px', height: '2px', background: primaryBrandColor, margin: '3px 0 4px auto', borderRadius: '2px', opacity: 0.8 }} />
           </div>
           <div
             style={{
               fontSize: '0.56rem',
               fontWeight: 800,
               letterSpacing: '0.14em',
-              color: '#8C674E',
+              color: badgeText,
               textTransform: 'uppercase',
               lineHeight: 1.35
             }}
@@ -116,13 +125,13 @@ export const AdminLoginPage = () => {
             display: 'inline-flex',
             alignItems: 'center',
             gap: '6px',
-            background: '#FDF1EB',
-            border: '1.2px solid #F0DAC9',
+            background: badgeBg,
+            border: `1.2px solid ${badgeBorder}`,
             padding: '5px 14px',
             borderRadius: '24px',
             fontSize: '0.72rem',
             fontWeight: 800,
-            color: '#8B4822',
+            color: badgeText,
             letterSpacing: '0.04em',
             marginBottom: '1.25rem',
             textDecoration: 'none'
@@ -132,14 +141,14 @@ export const AdminLoginPage = () => {
         </Link>
 
         {/* Café Identity Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '1.25rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginTop: '0.65rem', marginBottom: '1.25rem' }}>
           <div
             style={{
               width: '52px',
               height: '52px',
               borderRadius: '16px',
-              background: '#2E1C14',
-              color: '#C86D44',
+              background: isJeccafe ? '#2E1C14' : '#0F172A',
+              color: isJeccafe ? '#C86D44' : '#38BDF8',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -147,27 +156,32 @@ export const AdminLoginPage = () => {
               flexShrink: 0
             }}
           >
-            <Coffee size={26} />
+            {isJeccafe ? <Coffee size={26} /> : <Zap size={26} />}
           </div>
 
           <div>
-            <h1
-              style={{
-                fontFamily: "'Fraunces', Georgia, serif",
-                fontSize: '1.85rem',
-                fontWeight: 800,
-                color: '#1A1816',
-                margin: 0,
-                lineHeight: 1.15
-              }}
-            >
-              {cafeName} Admin
-            </h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h1
+                style={{
+                  fontFamily: "'Fraunces', Georgia, serif",
+                  fontSize: '1.75rem',
+                  fontWeight: 800,
+                  color: '#1A1816',
+                  margin: 0,
+                  lineHeight: 1.15
+                }}
+              >
+                {cafeName} Admin
+              </h1>
+            </div>
+            <div style={{ fontSize: '0.78rem', color: '#8C7E74', marginTop: '2px', fontWeight: 600 }}>
+              Authorized Café Management Portal
+            </div>
           </div>
         </div>
 
-        <p style={{ color: '#6E6258', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: 1.55 }}>
-          Sign in to manage live kitchen orders, menu combos, stock levels, and revenue analytics.
+        <p style={{ color: '#6E6258', fontSize: '0.88rem', marginBottom: '1.4rem', lineHeight: 1.55 }}>
+          Sign in to manage live kitchen orders, menu combos, pricing, and revenue analytics for {cafeName}.
         </p>
 
         {errorMsg && (
@@ -209,15 +223,15 @@ export const AdminLoginPage = () => {
                   width: '38px',
                   height: '38px',
                   borderRadius: '50%',
-                  background: '#F9F2EA',
-                  border: '1px solid #EADBCC',
+                  background: isJeccafe ? '#F9F2EA' : '#F0F9FF',
+                  border: `1px solid ${isJeccafe ? '#EADBCC' : '#BAE6FD'}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0
                 }}
               >
-                <Mail size={18} color="#9C5B32" strokeWidth={2} />
+                <Mail size={18} color={primaryBrandColor} strokeWidth={2} />
               </div>
               <input
                 type="email"
@@ -259,15 +273,15 @@ export const AdminLoginPage = () => {
                   width: '38px',
                   height: '38px',
                   borderRadius: '50%',
-                  background: '#F9F2EA',
-                  border: '1px solid #EADBCC',
+                  background: isJeccafe ? '#F9F2EA' : '#F0F9FF',
+                  border: `1px solid ${isJeccafe ? '#EADBCC' : '#BAE6FD'}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0
                 }}
               >
-                <Lock size={18} color="#9C5B32" strokeWidth={2} />
+                <Lock size={18} color={primaryBrandColor} strokeWidth={2} />
               </div>
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -315,14 +329,18 @@ export const AdminLoginPage = () => {
               width: '100%',
               padding: '14px',
               marginTop: '0.4rem',
-              background: 'linear-gradient(135deg, #3A1F12 0%, #1A0F09 100%)',
+              background: isJeccafe
+                ? 'linear-gradient(135deg, #3A1F12 0%, #1A0F09 100%)'
+                : 'linear-gradient(135deg, #0369A1 0%, #082F49 100%)',
               color: '#FFFFFF',
               border: 'none',
               borderRadius: '16px',
               fontSize: '1rem',
               fontWeight: 700,
               cursor: loading ? 'not-allowed' : 'pointer',
-              boxShadow: '0 10px 24px rgba(45, 20, 10, 0.32)',
+              boxShadow: isJeccafe
+                ? '0 10px 24px rgba(45, 20, 10, 0.32)'
+                : '0 10px 24px rgba(2, 132, 199, 0.32)',
               transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
             }}
           >

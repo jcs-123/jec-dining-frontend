@@ -341,7 +341,7 @@ export const OrderDetailPage = () => {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`http://localhost:5173/admin/verify-pickup/${order._id}`)}`}
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/admin/verify-pickup/${order._id}`)}`}
               alt="Order Pickup QR Code"
               width="100"
               height="100"
@@ -409,12 +409,6 @@ export const OrderDetailPage = () => {
             <span>Subtotal</span>
             <span>{formatINR(order.subtotalPaise)}</span>
           </div>
-          {order.taxPaise > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
-              <span>GST Taxes & Fees</span>
-              <span>{formatINR(order.taxPaise)}</span>
-            </div>
-          )}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',

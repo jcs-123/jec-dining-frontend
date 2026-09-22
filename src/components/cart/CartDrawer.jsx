@@ -414,9 +414,6 @@ export const CartDrawer = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                 <div>
                   <span style={{ fontSize: '0.94rem', color: '#211712', fontWeight: 600 }}>Subtotal</span>
-                  <div style={{ fontSize: '0.74rem', color: '#756B65', marginTop: '2px' }}>
-                    Taxes calculated at checkout
-                  </div>
                 </div>
                 <span style={{ fontSize: '1.05rem', fontWeight: 700, color: '#211712' }}>
                   {formatINR(subtotalPaise)}

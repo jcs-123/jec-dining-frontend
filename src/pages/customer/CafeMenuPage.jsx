@@ -50,6 +50,7 @@ export const CafeMenuPage = () => {
   const [selectedComboForCustomizer, setSelectedComboForCustomizer] = useState(null);
 
   useEffect(() => {
+    let active = true;
     const slug = cafeSlug || location.pathname.replace(/^\//, '').split('/')[0] || 'jeccafe';
     if (slug) {
       setSelectedCategory('all');
@@ -57,30 +58,36 @@ export const CafeMenuPage = () => {
       setVegFilter('all');
       setCombos([]);
       setCategories([]);
-      loadCafeData(slug);
+
+      const load = async () => {
+        try {
+          setLoading(true);
+          selectCafeBySlug(slug);
+
+          const [cafeRes, catRes, comboRes] = await Promise.all([
+            api.get(`/cafes/${slug}`),
+            api.get(`/categories/cafe/${slug}`),
+            api.get(`/combos/cafe/${slug}`)
+          ]);
+
+          if (!active) return;
+          if (cafeRes.success) setCafe(cafeRes.cafe);
+          if (catRes.success) setCategories(catRes.categories || []);
+          if (comboRes.success) setCombos(comboRes.combos || []);
+        } catch (err) {
+          if (active) console.error('Failed to load menu:', err);
+        } finally {
+          if (active) setLoading(false);
+        }
+      };
+
+      load();
     }
+
+    return () => {
+      active = false;
+    };
   }, [location.pathname, cafeSlug]);
-
-  const loadCafeData = async (slug) => {
-    try {
-      setLoading(true);
-      selectCafeBySlug(slug);
-
-      const [cafeRes, catRes, comboRes] = await Promise.all([
-        api.get(`/cafes/${slug}`),
-        api.get(`/categories/cafe/${slug}`),
-        api.get(`/combos/cafe/${slug}`)
-      ]);
-
-      if (cafeRes.success) setCafe(cafeRes.cafe);
-      if (catRes.success) setCategories(catRes.categories || []);
-      if (comboRes.success) setCombos(comboRes.combos || []);
-    } catch (err) {
-      console.error('Failed to load menu:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Filter combos in memory or fetch
   const filteredCombos = combos.filter((combo) => {
@@ -111,7 +118,7 @@ export const CafeMenuPage = () => {
     addItem(cafe, combo, 1, [], targetDate);
   };
 
-  const isJeccafe = (cafeSlug === 'jeccafe') || (!cafeSlug && cafe?.slug !== 'jec-bytest');
+  const isJeccafe = (cafeSlug === 'jeccafe') || (!cafeSlug && !(cafe?.slug || '').includes('byte'));
   const bannerBg = isJeccafe ? '#1B0E09' : '#052F31';
   const copperAccent = '#D66C3E';
   const softBorder = '#E8DDD2';

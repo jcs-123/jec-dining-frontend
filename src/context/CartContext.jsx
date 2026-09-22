@@ -76,7 +76,7 @@ export const CartProvider = ({ children }) => {
   const performAdd = (cafe, combo, quantity, selectedOptions, scheduledDate = 'Today') => {
     const dateLabel = scheduledDate || 'Today';
     const customKey = generateCustomKey(combo._id || combo.id, selectedOptions, dateLabel);
-    const effectiveBase = combo.offerPricePaise != null ? combo.offerPricePaise : combo.basePricePaise;
+    const effectiveBase = combo.basePricePaise;
     const extrasPaise = selectedOptions.reduce((sum, opt) => sum + (opt.extraPricePaise || 0), 0);
     const unitPricePaise = effectiveBase + extrasPaise;
 

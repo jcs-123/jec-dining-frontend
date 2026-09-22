@@ -55,11 +55,11 @@ export const CafeHeader = ({ cafe }) => {
 
   // Reliably identify active café based on route pathname or prop
   const pathSlug = location.pathname.replace(/^\//, '').split('/')[0].toLowerCase();
-  const activeSlug = (pathSlug === 'jeccafe' || pathSlug === 'jec-bytest')
-    ? pathSlug
+  const activeSlug = (pathSlug === 'jeccafe' || pathSlug.includes('byte'))
+    ? (pathSlug.includes('byte') ? 'jecbytes' : 'jeccafe')
     : (cafe?.slug || currentCafe?.slug || 'jeccafe');
 
-  const activeCafe = cafes.find(c => c.slug === activeSlug) || cafe || currentCafe || {
+  const activeCafe = cafes.find(c => c.slug === activeSlug || (activeSlug.includes('byte') && c.slug.includes('byte'))) || cafe || currentCafe || {
     slug: activeSlug,
     name: activeSlug === 'jeccafe' ? 'JECCAFE' : 'JEC BYTES',
     tagline: activeSlug === 'jeccafe' ? 'Artisanal Coffee & Bistro Combos' : 'Fast Bites, Bowls & Modern Sips',
@@ -67,8 +67,8 @@ export const CafeHeader = ({ cafe }) => {
     address: 'East Quad, Central Plaza, JEC Campus'
   };
 
-  const otherSlug = activeSlug === 'jeccafe' ? 'jec-bytest' : 'jeccafe';
-  const otherCafe = cafes.find(c => c.slug === otherSlug) || {
+  const otherSlug = activeSlug === 'jeccafe' ? 'jecbytes' : 'jeccafe';
+  const otherCafe = cafes.find(c => c.slug === otherSlug || (otherSlug.includes('byte') && c.slug.includes('byte'))) || {
     slug: otherSlug,
     name: otherSlug === 'jeccafe' ? 'JECCAFE' : 'JEC BYTES',
     tagline: otherSlug === 'jeccafe' ? 'Artisanal Coffee & Bistro Combos' : 'Fast Bites, Bowls & Modern Sips',

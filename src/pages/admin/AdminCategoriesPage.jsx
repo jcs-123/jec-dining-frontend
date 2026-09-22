@@ -65,7 +65,7 @@ export const AdminCategoriesPage = () => {
         }
       />
 
-      <div style={{ padding: '2rem', maxWidth: '800px' }}>
+      <div className="admin-page-container" style={{ maxWidth: '900px' }}>
         <div className="card" style={{ padding: '1.25rem' }}>
           {loading ? (
             <div style={{ textAlign: 'center', padding: '2rem' }}>Loading categories...</div>

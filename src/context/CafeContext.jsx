@@ -3,12 +3,27 @@ import { api } from '../services/api';
 
 const CafeContext = createContext(null);
 
+export const normalizeCafeSlug = (slug) => {
+  if (!slug) return 'jeccafe';
+  const lower = slug.toLowerCase().trim();
+  if (lower.includes('byte')) return 'jecbytes';
+  if (lower.includes('cafe')) return 'jeccafe';
+  return lower;
+};
+
 export const CafeProvider = ({ children }) => {
   const [cafes, setCafes] = useState([]);
   const [currentCafe, setCurrentCafe] = useState(() => {
     try {
       const saved = localStorage.getItem('jec_active_cafe');
-      return saved ? JSON.parse(saved) : null;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && (parsed.slug === 'jec-bytest' || parsed.slug === 'jec-bytes')) {
+          parsed.slug = 'jecbytes';
+        }
+        return parsed;
+      }
+      return null;
     } catch {
       return null;
     }
@@ -25,11 +40,13 @@ export const CafeProvider = ({ children }) => {
         // Auto-detect active cafe from URL or storage
         const pathSlug = window.location.pathname.replace(/^\//, '').split('/')[0].toLowerCase();
         let target = null;
-        if (pathSlug === 'jeccafe' || pathSlug === 'jec-bytest') {
-          target = res.cafes.find(c => c.slug === pathSlug);
+        if (pathSlug === 'jeccafe' || pathSlug === 'jecbytes' || pathSlug === 'jec-bytes' || pathSlug === 'jec-bytest') {
+          const querySlug = pathSlug.includes('byte') ? 'jecbytes' : 'jeccafe';
+          target = res.cafes.find(c => c.slug === querySlug || c.slug === pathSlug);
         }
         if (!target && currentCafe) {
-          target = res.cafes.find(c => c.slug === currentCafe.slug);
+          const currentSlug = (currentCafe.slug || '').includes('byte') ? 'jecbytes' : currentCafe.slug;
+          target = res.cafes.find(c => c.slug === currentSlug || c.slug === currentCafe.slug);
         }
         if (!target && res.cafes.length > 0) {
           target = res.cafes[0];
@@ -58,9 +75,10 @@ export const CafeProvider = ({ children }) => {
       document.documentElement.removeAttribute('data-theme');
       return null;
     }
-    const targetSlug = slug.toLowerCase();
+    const raw = slug.toLowerCase();
+    const targetSlug = raw.includes('byte') ? 'jecbytes' : (raw.includes('cafe') ? 'jeccafe' : raw);
     const sourceList = list && list.length > 0 ? list : cafes;
-    const found = sourceList.find(c => c.slug === targetSlug);
+    const found = sourceList.find(c => c.slug === targetSlug || c.slug === raw);
     if (found) {
       setCurrentCafe(found);
       localStorage.setItem('jec_active_cafe', JSON.stringify(found));

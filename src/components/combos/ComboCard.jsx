@@ -3,8 +3,7 @@ import { formatINR } from '../../utils/formatters';
 import { Plus, CheckCircle2, Calendar } from 'lucide-react';
 
 export const ComboCard = ({ combo, onQuickAdd, defaultDate = 'Today' }) => {
-  const isOffer = combo.offerPricePaise != null && combo.offerPricePaise < combo.basePricePaise;
-  const displayPrice = isOffer ? combo.offerPricePaise : combo.basePricePaise;
+  const displayPrice = combo.basePricePaise;
 
   const [selectedDate, setSelectedDate] = useState(defaultDate || 'Today');
 
@@ -90,27 +89,6 @@ export const ComboCard = ({ combo, onQuickAdd, defaultDate = 'Today' }) => {
             {combo.isVeg ? 'VEG' : 'NON-VEG'}
           </span>
         </div>
-
-        {/* 3. SPECIAL OFFER badge */}
-        {isOffer && (
-          <div style={{
-            position: 'absolute',
-            top: '10px',
-            right: '10px',
-            background: copperAccent,
-            color: '#FFFFFF',
-            fontSize: '0.68rem',
-            fontWeight: 800,
-            padding: '3px 7px',
-            borderRadius: '6px',
-            letterSpacing: '0.04em',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-            zIndex: 2,
-            whiteSpace: 'nowrap'
-          }}>
-            SPECIAL OFFER
-          </div>
-        )}
 
         {/* Sold Out Overlay */}
         {combo.isSoldOut && (
@@ -296,11 +274,6 @@ export const ComboCard = ({ combo, onQuickAdd, defaultDate = 'Today' }) => {
               <span style={{ fontSize: '1.18rem', fontWeight: 800, color: mainText }}>
                 {formatINR(displayPrice)}
               </span>
-              {isOffer && (
-                <span style={{ fontSize: '0.78rem', textDecoration: 'line-through', color: mutedText }}>
-                  {formatINR(combo.basePricePaise)}
-                </span>
-              )}
             </div>
             <span style={{ fontSize: '0.7rem', color: '#18A66A', fontWeight: 700 }}>
               Complete Package

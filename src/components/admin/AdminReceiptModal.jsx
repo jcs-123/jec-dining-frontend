@@ -21,7 +21,7 @@ export const AdminReceiptModal = ({ order, cafe, isOpen, onClose }) => {
 
   if (!isOpen || !order) return null;
 
-  const isJeccafe = (cafe?.slug === 'jeccafe') || (!cafe?.slug && order?.cafeId?.slug !== 'jec-bytest');
+  const isJeccafe = (cafe?.slug === 'jeccafe') || (!cafe?.slug && !(order?.cafeId?.slug || '').includes('byte'));
   const accentColor = '#D66C3E';
 
   const handlePrint = () => {
@@ -82,7 +82,7 @@ export const AdminReceiptModal = ({ order, cafe, isOpen, onClose }) => {
                 color: '#1E140E'
               }}
             >
-              Tax Invoice & Receipt
+              Order Receipt
             </span>
             <span
               style={{
@@ -335,7 +335,7 @@ export const AdminReceiptModal = ({ order, cafe, isOpen, onClose }) => {
             </div>
           </div>
 
-          {/* Billing & Tax Summary */}
+          {/* Billing Summary */}
           <div
             style={{
               borderTop: '1.5px solid #1E140E',
@@ -346,10 +346,6 @@ export const AdminReceiptModal = ({ order, cafe, isOpen, onClose }) => {
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#5C5046', marginBottom: '6px' }}>
               <span>Subtotal</span>
               <span>{formatINR(order.subtotalPaise)}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#5C5046', marginBottom: '6px' }}>
-              <span>GST / Taxes ({cafe?.taxRatePercent || 5}%)</span>
-              <span>{formatINR(order.taxPaise)}</span>
             </div>
 
             <div
@@ -394,10 +390,10 @@ export const AdminReceiptModal = ({ order, cafe, isOpen, onClose }) => {
               COUNTER PICKUP QR VERIFICATION
             </div>
             <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(`JEC_ORDER:${order._id}`)}`}
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/admin/verify-pickup/${order._id}`)}`}
               alt="Order Verification QR"
-              width="120"
-              height="120"
+              width="130"
+              height="130"
               style={{ display: 'block', margin: '0 auto', borderRadius: '8px' }}
             />
             <div style={{ fontSize: '0.7rem', color: '#9C8E84', marginTop: '6px' }}>

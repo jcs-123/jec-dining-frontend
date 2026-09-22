@@ -96,7 +96,26 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = async () => {
+  const loginSuperAdmin = async (identifier, password) => {
+    try {
+      const res = await api.post('/auth/super-admin/login', { identifier, password });
+      if (res.success) {
+        setUser(res.user);
+        toast.success(res.message || 'Super Admin login successful');
+        return res.user;
+      }
+    } catch (err) {
+      toast.error(err.message || 'Super Admin authentication failed');
+      throw err;
+    }
+  };
+
+  const logout = async (redirectUrl = null) => {
+    const wasSuperAdmin = user?.role === 'super_admin';
+    const wasAdmin = user?.role === 'cafe_admin';
+    const rawCafeSlug = user?.cafe?.slug || (window.location.pathname.replace(/^\//, '').split('/')[0]);
+    const adminLoginSlug = (rawCafeSlug && rawCafeSlug.includes('byte')) ? 'jecbytes' : 'jeccafe';
+
     try {
       await api.post('/auth/logout', {});
     } catch {
@@ -104,7 +123,13 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setUser(null);
       toast.info('You have been logged out.');
-      if (window.location.pathname !== '/') {
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
+      } else if (wasSuperAdmin) {
+        window.location.href = '/super-admin/login';
+      } else if (wasAdmin) {
+        window.location.href = `/${adminLoginSlug}/admin/login`;
+      } else if (window.location.pathname !== '/') {
         window.location.href = '/';
       }
     }
@@ -118,10 +143,12 @@ export const AuthProvider = ({ children }) => {
       registerCustomer,
       changeCustomerCafe,
       loginAdmin,
+      loginSuperAdmin,
       logout,
       refreshUser: fetchCurrentUser,
       isAuthenticated: !!user,
       isAdmin: user?.role === 'cafe_admin',
+      isSuperAdmin: user?.role === 'super_admin',
       isCustomer: user?.role === 'customer'
     }}>
       {children}

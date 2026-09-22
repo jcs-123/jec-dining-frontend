@@ -83,6 +83,8 @@
 }
 
 /* JEC BYTES Theme Variables */
+[data-theme="jecbytes"],
+[data-theme="jec-bytes"],
 [data-theme="jec-bytest"] {
   --brand-primary: #0C383E;
   --brand-accent: #E86034;

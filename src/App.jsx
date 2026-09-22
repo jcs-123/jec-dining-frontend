@@ -8,12 +8,14 @@ import { CartProvider } from './context/CartContext';
 // Layouts
 import { CustomerLayout } from './layouts/CustomerLayout';
 import { AdminLayout } from './layouts/AdminLayout';
+import { SuperAdminLayout } from './layouts/SuperAdminLayout';
 
 // Public & Auth Pages
 import { LandingPage } from './pages/public/LandingPage';
 import { CustomerAuthPage } from './pages/auth/CustomerAuthPage';
 import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 import { AdminLoginPage } from './pages/auth/AdminLoginPage';
+import { SuperAdminLoginPage } from './pages/auth/SuperAdminLoginPage';
 import { NotFoundPage } from './pages/public/NotFoundPage';
 
 // Customer Pages
@@ -33,6 +35,12 @@ import { AdminReportsPage } from './pages/admin/AdminReportsPage';
 import { AdminSettingsPage } from './pages/admin/AdminSettingsPage';
 import { AdminPickupVerificationPage } from './pages/admin/AdminPickupVerificationPage';
 
+// Super Admin Pages
+import { SuperAdminDashboardPage } from './pages/super-admin/SuperAdminDashboardPage';
+import { SuperAdminOrdersPage } from './pages/super-admin/SuperAdminOrdersPage';
+import { SuperAdminReportsPage } from './pages/super-admin/SuperAdminReportsPage';
+import { SuperAdminUsersPage } from './pages/super-admin/SuperAdminUsersPage';
+
 export function App() {
   return (
     <BrowserRouter>
@@ -46,10 +54,21 @@ export function App() {
                 <Route path="/auth" element={<CustomerAuthPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-                {/* 2. Admin Login Routes for each Café */}
+                {/* 2. Admin Login Routes */}
                 <Route path="/jeccafe/admin/login" element={<AdminLoginPage />} />
-                <Route path="/jec-bytest/admin/login" element={<AdminLoginPage />} />
-                <Route path="/jec-bytes/admin/login" element={<Navigate to="/jec-bytest/admin/login" replace />} />
+                <Route path="/jecbytes/admin/login" element={<AdminLoginPage />} />
+
+                {/* 3. Super Admin Governance Routes */}
+                <Route path="/super-admin/login" element={<SuperAdminLoginPage />} />
+                <Route path="/superadmin/login" element={<Navigate to="/super-admin/login" replace />} />
+                <Route path="/super-admin" element={<SuperAdminLayout />}>
+                  <Route index element={<Navigate to="dashboard" replace />} />
+                  <Route path="dashboard" element={<SuperAdminDashboardPage />} />
+                  <Route path="orders" element={<SuperAdminOrdersPage />} />
+                  <Route path="reports" element={<SuperAdminReportsPage />} />
+                  <Route path="users" element={<SuperAdminUsersPage />} />
+                </Route>
+                <Route path="/superadmin" element={<Navigate to="/super-admin/dashboard" replace />} />
 
                 {/* 3. Admin Protected Routes with Café Tenant Isolation */}
                 <Route path="/:cafeSlug/admin" element={<AdminLayout />}>
@@ -68,8 +87,10 @@ export function App() {
                 <Route element={<CustomerLayout />}>
                   {/* Café Menus */}
                   <Route path="/jeccafe" element={<CafeMenuPage />} />
-                  <Route path="/jec-bytest" element={<CafeMenuPage />} />
-                  <Route path="/jec-bytes" element={<Navigate to="/jec-bytest" replace />} />
+                  <Route path="/jecbytes" element={<CafeMenuPage />} />
+                  <Route path="/jec-bytes" element={<Navigate to="/jecbytes" replace />} />
+                  <Route path="/jec-bytest" element={<Navigate to="/jecbytes" replace />} />
+                  <Route path="/bytes" element={<Navigate to="/jecbytes" replace />} />
                   <Route path="/cafe/:cafeSlug" element={<CafeMenuPage />} />
 
                   {/* Ordering & Checkout Flow */}

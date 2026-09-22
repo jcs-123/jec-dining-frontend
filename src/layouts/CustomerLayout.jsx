@@ -14,7 +14,7 @@ export const CustomerLayout = () => {
 
   useEffect(() => {
     const slug = location.pathname.replace(/^\//, '').split('/')[0].toLowerCase();
-    if (slug === 'jeccafe' || slug === 'jec-bytest') {
+    if (slug === 'jeccafe' || slug === 'jecbytes' || slug === 'jec-bytes' || slug === 'jec-bytest') {
       selectCafeBySlug(slug, cafes);
     }
   }, [location.pathname, cafes]);

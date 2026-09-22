@@ -17,39 +17,59 @@ import {
   AtSign,
   Store,
   LogOut,
-  Sparkles
+  Sparkles,
+  RotateCcw
 } from 'lucide-react';
 
 export const CustomerAuthPage = () => {
   const [searchParams] = useSearchParams();
-  const redirectPath = searchParams.get('redirect') || '/';
+  const rawRedirect = searchParams.get('redirect');
+  const redirectPath = (rawRedirect && rawRedirect !== '/' && rawRedirect !== '/auth') ? rawRedirect : '/jeccafe';
   const navigate = useNavigate();
-  const { user, isAuthenticated, loginCustomer, registerCustomer, changeCustomerCafe, logout } = useAuth();
+  const { user, isAuthenticated, loginCustomer, changeCustomerCafe, logout } = useAuth();
   const { showSuccess, showError } = useToast();
 
-  const [mode, setMode] = useState('login'); // 'login' | 'register' | 'forgot'
+  const initialMode = searchParams.get('mode') === 'forgot' || searchParams.get('tab') === 'forgot' ? 'forgot' : 'login';
+  const [mode, setMode] = useState(initialMode);
   const [cafes, setCafes] = useState([
     { name: 'JECCAFE', slug: 'jeccafe' },
-    { name: 'JEC BYTES', slug: 'jec-bytest' }
+    { name: 'JEC BYTES', slug: 'jecbytes' }
   ]);
+
+  useEffect(() => {
+    const m = searchParams.get('mode') || searchParams.get('tab');
+    if (m === 'forgot') {
+      setMode('forgot');
+    } else if (m === 'login') {
+      setMode('login');
+    }
+  }, [searchParams]);
 
   // Login form state
   const [loginIdentifier, setLoginIdentifier] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [showLoginPassword, setShowLoginPassword] = useState(false);
 
-  // Register form state
-  const [regAdmissionNumber, setRegAdmissionNumber] = useState('');
-  const [regName, setRegName] = useState('');
-  const [regUsername, setRegUsername] = useState('');
-  const [regEmail, setRegEmail] = useState('');
-  const [regPassword, setRegPassword] = useState('');
-  const [regCafeName, setRegCafeName] = useState('JECCAFE');
-  const [showRegPassword, setShowRegPassword] = useState(false);
-
-  // Forgot password state
+  // Forgot password multi-step state: 'email' | 'otp' | 'new_password'
+  const [forgotStep, setForgotStep] = useState('email');
   const [forgotEmail, setForgotEmail] = useState('');
-  const [forgotSent, setForgotSent] = useState(false);
+  const [resetOtp, setResetOtp] = useState('');
+  const [resetNewPassword, setResetNewPassword] = useState('');
+  const [resetConfirmPassword, setResetConfirmPassword] = useState('');
+  const [showResetNewPassword, setShowResetNewPassword] = useState(false);
+  const [showResetConfirmPassword, setShowResetConfirmPassword] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetErrorMsg, setResetErrorMsg] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  useEffect(() => {
+    let timer;
+    if (resendCooldown > 0) {
+      timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -62,7 +82,6 @@ export const CustomerAuthPage = () => {
         const res = await api.get('/cafes');
         if (res.success && Array.isArray(res.cafes) && res.cafes.length > 0) {
           setCafes(res.cafes);
-          setRegCafeName(res.cafes[0].name);
         }
       } catch (err) {
         console.error('Failed to load cafes list:', err);
@@ -78,7 +97,7 @@ export const CustomerAuthPage = () => {
       setLoading(true);
       const loggedUser = await loginCustomer(loginIdentifier, loginPassword);
       showSuccess(`Welcome back, ${loggedUser.name}! Signed in to JEC Dining.`);
-      const dest = loggedUser.cafe?.slug ? `/${loggedUser.cafe.slug}` : redirectPath;
+      const dest = redirectPath || '/jeccafe';
       navigate(dest, { replace: true });
     } catch (err) {
       const msg = err.message || 'Authentication failed. Please check your credentials.';
@@ -89,74 +108,98 @@ export const CustomerAuthPage = () => {
     }
   };
 
-  const handleRegisterSubmit = async (e) => {
-    e.preventDefault();
-    setErrorMsg('');
-
-    if (!regAdmissionNumber.trim()) {
-      setErrorMsg('Admission Number is required.');
-      return;
-    }
-    if (!regName.trim()) {
-      setErrorMsg('Full Name is required.');
-      return;
-    }
-    if (!regUsername.trim()) {
-      setErrorMsg('Username is required.');
-      return;
-    }
-    if (!regEmail.trim()) {
-      setErrorMsg('Mail ID is required.');
-      return;
-    }
-    if (regPassword.length < 6) {
-      setErrorMsg('Password must be at least 6 characters long.');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const newUser = await registerCustomer({
-        admissionNumber: regAdmissionNumber.trim(),
-        name: regName.trim(),
-        username: regUsername.trim().toLowerCase(),
-        email: regEmail.trim(),
-        password: regPassword,
-        cafeName: regCafeName
-      });
-
-      showSuccess(`Account created! Welcome to ${regCafeName}, ${newUser.name}.`);
-      const targetSlug = cafes.find(c => c.name.toLowerCase() === regCafeName.toLowerCase())?.slug || 'jeccafe';
-      navigate(`/${targetSlug}`, { replace: true });
-    } catch (err) {
-      const msg = err.message || 'Registration failed. Please try again.';
-      setErrorMsg(msg);
-      showError(msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const [forgotLoading, setForgotLoading] = useState(false);
-  const [forgotDevLink, setForgotDevLink] = useState('');
-
+  // Step 1: Send OTP to Email
   const handleForgotSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     if (!forgotEmail.trim()) return;
     try {
       setForgotLoading(true);
+      setResetErrorMsg('');
       const res = await api.post('/auth/forgot-password', { email: forgotEmail.trim() });
       if (res.success) {
-        setForgotSent(true);
-        if (res.resetLink) {
-          setForgotDevLink(res.resetLink);
-        }
-        showSuccess(res.message || `Password reset instructions sent to ${forgotEmail}`);
+        setForgotStep('otp');
+        setResendCooldown(30);
+        showSuccess(res.message || `Password reset OTP sent to ${forgotEmail}`);
       }
     } catch (err) {
-      showError(err.message || 'Failed to send reset email');
+      showError(err.message || 'Failed to send reset OTP');
     } finally {
       setForgotLoading(false);
+    }
+  };
+
+  // Step 2: Verify OTP Only
+  const handleVerifyOtp = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    setResetErrorMsg('');
+
+    const trimmedOtp = (resetOtp || '').trim();
+    if (!trimmedOtp || trimmedOtp.length !== 6) {
+      setResetErrorMsg('Please enter the 6-digit verification OTP sent to your email.');
+      return;
+    }
+
+    try {
+      setResetLoading(true);
+      const res = await api.post('/auth/verify-otp', {
+        email: forgotEmail.trim(),
+        otp: trimmedOtp
+      });
+
+      if (res.success) {
+        showSuccess('OTP verified! Now create your new password.');
+        setForgotStep('new_password');
+        setResetErrorMsg('');
+      }
+    } catch (err) {
+      const msg = err.message || 'Invalid or expired OTP. Please check the code and try again.';
+      setResetErrorMsg(msg);
+      showError(msg);
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  // Step 3: Save New Password
+  const handleSaveNewPassword = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    setResetErrorMsg('');
+
+    if (resetNewPassword.length < 6) {
+      setResetErrorMsg('New password must be at least 6 characters long.');
+      return;
+    }
+
+    if (resetNewPassword !== resetConfirmPassword) {
+      setResetErrorMsg('New password and confirm password do not match.');
+      return;
+    }
+
+    try {
+      setResetLoading(true);
+      const res = await api.post('/auth/reset-password', {
+        email: forgotEmail.trim(),
+        otp: (resetOtp || '').trim(),
+        newPassword: resetNewPassword,
+        confirmPassword: resetConfirmPassword
+      });
+
+      if (res.success) {
+        showSuccess('Password updated successfully! You can now log in.');
+        setLoginIdentifier(forgotEmail.trim());
+        setMode('login');
+        setForgotStep('email');
+        setResetOtp('');
+        setResetNewPassword('');
+        setResetConfirmPassword('');
+        setResetErrorMsg('');
+      }
+    } catch (err) {
+      const msg = err.message || 'Failed to update password. Please try again.';
+      setResetErrorMsg(msg);
+      showError(msg);
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -389,7 +432,7 @@ export const CustomerAuthPage = () => {
             </div>
           </div>
         ) : mode === 'forgot' ? (
-          /* FORGOT PASSWORD VIEW */
+          /* FORGOT PASSWORD VIEW - 3 STEPS */
           <div>
             <div
               style={{
@@ -407,7 +450,11 @@ export const CustomerAuthPage = () => {
               }}
             >
               <KeyRound size={13} strokeWidth={2.5} />
-              <span>CAMPUS CREDENTIAL HELP</span>
+              <span>
+                {forgotStep === 'email' && 'PASSWORD RECOVERY • STEP 1 OF 3'}
+                {forgotStep === 'otp' && 'VERIFY IDENTITY • STEP 2 OF 3'}
+                {forgotStep === 'new_password' && 'CREATE PASSWORD • STEP 3 OF 3'}
+              </span>
             </div>
 
             <h1
@@ -420,60 +467,40 @@ export const CustomerAuthPage = () => {
                 lineHeight: 1.2
               }}
             >
-              Reset Your Password
+              {forgotStep === 'email' && 'Reset Your Password'}
+              {forgotStep === 'otp' && 'Verify 6-Digit OTP'}
+              {forgotStep === 'new_password' && 'Create New Password'}
             </h1>
+
             <p style={{ color: '#6E6258', fontSize: '0.88rem', marginBottom: '1.5rem', lineHeight: 1.55 }}>
-              Enter your registered Jyothi Engineering College email address to receive password reset instructions.
+              {forgotStep === 'email' && 'Enter your registered Jyothi Engineering College email to receive a verification OTP code.'}
+              {forgotStep === 'otp' && `Enter the 6-digit OTP code sent to ${forgotEmail}.`}
+              {forgotStep === 'new_password' && 'Enter and confirm your new password to secure your account.'}
             </p>
 
-            {forgotSent ? (
+            {resetErrorMsg && (
               <div
                 style={{
-                  background: '#F2FAF3',
-                  border: '1.5px solid #C5E6CE',
-                  borderRadius: '16px',
-                  padding: '1.25rem',
-                  marginBottom: '1.5rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '10px'
+                  background: '#FDF2F2',
+                  border: '1.5px solid #F8D7DA',
+                  borderRadius: '14px',
+                  padding: '10px 14px',
+                  color: '#9C2525',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  marginBottom: '1.25rem'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1B6A35', fontWeight: 800, fontSize: '0.92rem' }}>
-                  <CheckCircle2 size={18} />
-                  <span>Password Reset Email Sent!</span>
-                </div>
-                <p style={{ fontSize: '0.86rem', color: '#2C5537', margin: 0, lineHeight: 1.55 }}>
-                  A premium password reset email has been dispatched via Nodemailer to <strong>{forgotEmail}</strong>. Please check your inbox and click the reset button.
-                </p>
-                {forgotDevLink && (
-                  <div style={{ marginTop: '6px', paddingTop: '8px', borderTop: '1px solid #C5E6CE' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1B6A35', marginBottom: '4px' }}>
-                      DIRECT RESET SHORTCUT:
-                    </div>
-                    <Link
-                      to={forgotDevLink}
-                      style={{
-                        display: 'inline-block',
-                        background: '#1B6A35',
-                        color: '#FFFFFF',
-                        padding: '6px 14px',
-                        borderRadius: '8px',
-                        fontSize: '0.82rem',
-                        fontWeight: 700,
-                        textDecoration: 'none'
-                      }}
-                    >
-                      Open Password Reset Page &rarr;
-                    </Link>
-                  </div>
-                )}
+                {resetErrorMsg}
               </div>
-            ) : (
+            )}
+
+            {/* STEP 1: ENTER EMAIL & SEND OTP */}
+            {forgotStep === 'email' && (
               <form onSubmit={handleForgotSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.86rem', fontWeight: 700, color: '#1A1816', marginBottom: '7px' }}>
-                    Campus Email Address
+                    Campus Email Address *
                   </label>
                   <div
                     style={{
@@ -505,7 +532,7 @@ export const CustomerAuthPage = () => {
                       type="email"
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
-                      placeholder="Enter your email"
+                      placeholder="e.g. rahul@jecc.ac.in"
                       required
                       style={{
                         width: '100%',
@@ -540,207 +567,191 @@ export const CustomerAuthPage = () => {
                     cursor: forgotLoading ? 'not-allowed' : 'pointer'
                   }}
                 >
-                  <span>{forgotLoading ? 'Sending Email...' : 'Send Reset Instructions'}</span>
+                  <span>{forgotLoading ? 'Sending Verification OTP...' : 'Send 6-Digit OTP'}</span>
                   <ArrowRight size={18} strokeWidth={2.4} />
                 </button>
               </form>
             )}
 
-            <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('login');
-                  setForgotSent(false);
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#8C674E',
-                  fontWeight: 700,
-                  fontSize: '0.88rem',
-                  cursor: 'pointer',
-                  padding: '6px'
-                }}
-              >
-                ← Return to Sign In
-              </button>
-            </div>
-          </div>
-        ) : (
-          /* AUTH FORMS (SIGN IN / CREATE ACCOUNT) */
-          <div>
-            {/* Mode Switcher Tabs */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                background: '#F0E5D8',
-                padding: '4px',
-                borderRadius: '16px',
-                marginBottom: '1.5rem',
-                border: '1px solid #E4D6C6'
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('login');
-                  setErrorMsg('');
-                }}
-                style={{
-                  padding: '9px 14px',
-                  borderRadius: '12px',
-                  border: 'none',
-                  background: mode === 'login' ? '#FFFFFF' : 'transparent',
-                  fontWeight: mode === 'login' ? 800 : 600,
-                  color: mode === 'login' ? '#1A1816' : '#8A7A6E',
-                  fontSize: '0.88rem',
-                  cursor: 'pointer',
-                  boxShadow: mode === 'login' ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('register');
-                  setErrorMsg('');
-                }}
-                style={{
-                  padding: '9px 14px',
-                  borderRadius: '12px',
-                  border: 'none',
-                  background: mode === 'register' ? '#FFFFFF' : 'transparent',
-                  fontWeight: mode === 'register' ? 800 : 600,
-                  color: mode === 'register' ? '#1A1816' : '#8A7A6E',
-                  fontSize: '0.88rem',
-                  cursor: 'pointer',
-                  boxShadow: mode === 'register' ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                Create Account
-              </button>
-            </div>
+            {/* STEP 2: VERIFY OTP ONLY */}
+            {forgotStep === 'otp' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <div
+                  style={{
+                    background: '#F2FAF3',
+                    border: '1.5px solid #C5E6CE',
+                    borderRadius: '16px',
+                    padding: '1rem 1.25rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1B6A35', fontWeight: 800, fontSize: '0.92rem' }}>
+                    <CheckCircle2 size={18} />
+                    <span>OTP Dispatched!</span>
+                  </div>
+                  <p style={{ fontSize: '0.86rem', color: '#2C5537', margin: 0, lineHeight: 1.5 }}>
+                    We sent a 6-digit verification code to <strong>{forgotEmail}</strong>. Check your inbox and enter the code below to continue.
+                  </p>
+                </div>
 
-            <h1
-              style={{
-                fontFamily: "'Fraunces', Georgia, serif",
-                fontSize: '1.95rem',
-                fontWeight: 800,
-                color: '#1A1816',
-                margin: '0 0 0.35rem',
-                letterSpacing: '-0.02em'
-              }}
-            >
-              {mode === 'login' ? 'Sign In to JEC Dining' : 'Register Customer Profile'}
-            </h1>
-            <p style={{ color: '#6E6258', fontSize: '0.88rem', marginBottom: '1.5rem', lineHeight: 1.55 }}>
-              {mode === 'login'
-                ? 'Sign in using your Mail ID, Username, or Admission Number.'
-                : 'Create your campus customer profile to order combos and select your preferred café.'}
-            </p>
+                <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '7px' }}>
+                      <label style={{ fontSize: '0.86rem', fontWeight: 700, color: '#1A1816' }}>
+                        Enter 6-Digit OTP *
+                      </label>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#C86D44', letterSpacing: '0.04em' }}>
+                        15 MIN VALIDITY
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        background: '#FFFFFF',
+                        border: '1.5px solid #E8DDD0',
+                        borderRadius: '16px',
+                        padding: '6px 14px'
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '38px',
+                          height: '38px',
+                          borderRadius: '50%',
+                          background: '#FDF1EB',
+                          border: '1px solid #F0DAC9',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}
+                      >
+                        <ShieldCheck size={18} color="#C86D44" strokeWidth={2.2} />
+                      </div>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={6}
+                        value={resetOtp}
+                        onChange={(e) => setResetOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="e.g. 123456"
+                        required
+                        autoFocus
+                        style={{
+                          width: '100%',
+                          border: 'none',
+                          outline: 'none',
+                          background: 'transparent',
+                          fontSize: '1.25rem',
+                          fontWeight: 700,
+                          letterSpacing: '0.25em',
+                          color: '#1A1816',
+                          fontFamily: 'monospace'
+                        }}
+                      />
+                    </div>
+                  </div>
 
-            {errorMsg && (
-              <div
-                style={{
-                  background: '#FDF2F2',
-                  border: '1.5px solid #F8D7DA',
-                  borderRadius: '14px',
-                  padding: '10px 14px',
-                  color: '#9C2525',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  marginBottom: '1rem'
-                }}
-              >
-                {errorMsg}
+                  <button
+                    type="submit"
+                    disabled={resetLoading || resetOtp.length !== 6}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '10px',
+                      width: '100%',
+                      padding: '14px',
+                      marginTop: '0.4rem',
+                      background: resetOtp.length === 6 ? 'linear-gradient(135deg, #3A1F12 0%, #1A0F09 100%)' : '#E8DDD0',
+                      color: resetOtp.length === 6 ? '#FFFFFF' : '#8A7A6E',
+                      border: 'none',
+                      borderRadius: '16px',
+                      fontSize: '1rem',
+                      fontWeight: 700,
+                      cursor: resetLoading || resetOtp.length !== 6 ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <span>{resetLoading ? 'Verifying OTP Code...' : 'Verify OTP & Continue'}</span>
+                    <ArrowRight size={18} strokeWidth={2.4} />
+                  </button>
+                </form>
+
+                {/* Sub-actions: Resend & Change Email */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem', marginTop: '4px' }}>
+                  <button
+                    type="button"
+                    onClick={handleForgotSubmit}
+                    disabled={forgotLoading || resendCooldown > 0}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: resendCooldown > 0 ? '#8C7E74' : '#C86D44',
+                      fontWeight: 700,
+                      cursor: forgotLoading || resendCooldown > 0 ? 'not-allowed' : 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      padding: 0
+                    }}
+                  >
+                    <RotateCcw size={13} />
+                    <span>{forgotLoading ? 'Resending...' : resendCooldown > 0 ? `Resend OTP (${resendCooldown}s)` : 'Resend OTP Code'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotStep('email');
+                      setResetOtp('');
+                      setResetErrorMsg('');
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#8C674E',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      padding: 0
+                    }}
+                  >
+                    Change Email
+                  </button>
+                </div>
               </div>
             )}
 
-            {mode === 'login' ? (
-              /* LOGIN FORM */
-              <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.86rem', fontWeight: 700, color: '#1A1816', marginBottom: '7px' }}>
-                    Mail ID / Username / Admission No *
-                  </label>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      background: '#FFFFFF',
-                      border: '1.5px solid #E8DDD0',
-                      borderRadius: '16px',
-                      padding: '6px 14px'
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: '38px',
-                        height: '38px',
-                        borderRadius: '50%',
-                        background: '#F9F2EA',
-                        border: '1px solid #EADBCC',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0
-                      }}
-                    >
-                      <Mail size={18} color="#9C5B32" strokeWidth={2} />
-                    </div>
-                    <input
-                      type="text"
-                      value={loginIdentifier}
-                      onChange={(e) => setLoginIdentifier(e.target.value)}
-                      placeholder="e.g. rahul@jecc.ac.in, rahul_jec, JEC2024CS042"
-                      required
-                      style={{
-                        width: '100%',
-                        border: 'none',
-                        outline: 'none',
-                        background: 'transparent',
-                        fontSize: '0.95rem',
-                        color: '#1A1816',
-                        fontWeight: 500
-                      }}
-                    />
-                  </div>
+            {/* STEP 3: CREATE NEW PASSWORD */}
+            {forgotStep === 'new_password' && (
+              <form onSubmit={handleSaveNewPassword} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+                <div
+                  style={{
+                    background: '#F2FAF3',
+                    border: '1.5px solid #C5E6CE',
+                    borderRadius: '14px',
+                    padding: '10px 14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    color: '#1B6A35',
+                    fontWeight: 700,
+                    fontSize: '0.84rem'
+                  }}
+                >
+                  <CheckCircle2 size={16} />
+                  <span>OTP Verified for {forgotEmail}</span>
                 </div>
 
+                {/* New Password */}
                 <div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '7px'
-                    }}
-                  >
-                    <label style={{ fontSize: '0.86rem', fontWeight: 700, color: '#1A1816' }}>
-                      Password *
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setMode('forgot')}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#9C5B32',
-                        fontWeight: 700,
-                        fontSize: '0.82rem',
-                        cursor: 'pointer',
-                        padding: 0
-                      }}
-                    >
-                      Forgot Password?
-                    </button>
-                  </div>
+                  <label style={{ display: 'block', fontSize: '0.86rem', fontWeight: 700, color: '#1A1816', marginBottom: '7px' }}>
+                    New Password (min 6 characters) *
+                  </label>
                   <div
                     style={{
                       display: 'flex',
@@ -768,25 +779,25 @@ export const CustomerAuthPage = () => {
                       <Lock size={18} color="#9C5B32" strokeWidth={2} />
                     </div>
                     <input
-                      type={showLoginPassword ? 'text' : 'password'}
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      placeholder="Enter your password"
+                      type={showResetNewPassword ? 'text' : 'password'}
+                      value={resetNewPassword}
+                      onChange={(e) => setResetNewPassword(e.target.value)}
+                      placeholder="Enter new password"
                       required
+                      autoFocus
                       style={{
                         width: '100%',
                         border: 'none',
                         outline: 'none',
                         background: 'transparent',
-                        fontSize: '0.95rem',
+                        fontSize: '0.96rem',
                         color: '#1A1816',
                         fontWeight: 500
                       }}
                     />
                     <button
                       type="button"
-                      onClick={() => setShowLoginPassword(!showLoginPassword)}
-                      aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
+                      onClick={() => setShowResetNewPassword(!showResetNewPassword)}
                       style={{
                         background: 'none',
                         border: 'none',
@@ -795,14 +806,100 @@ export const CustomerAuthPage = () => {
                         padding: '4px'
                       }}
                     >
-                      {showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      {showResetNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
                 </div>
 
+                {/* Confirm Password */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.86rem', fontWeight: 700, color: '#1A1816', marginBottom: '7px' }}>
+                    Confirm New Password *
+                  </label>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      background: '#FFFFFF',
+                      border: '1.5px solid #E8DDD0',
+                      borderRadius: '16px',
+                      padding: '6px 14px'
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '38px',
+                        height: '38px',
+                        borderRadius: '50%',
+                        background: '#F9F2EA',
+                        border: '1px solid #EADBCC',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}
+                    >
+                      <Lock size={18} color="#9C5B32" strokeWidth={2} />
+                    </div>
+                    <input
+                      type={showResetConfirmPassword ? 'text' : 'password'}
+                      value={resetConfirmPassword}
+                      onChange={(e) => setResetConfirmPassword(e.target.value)}
+                      placeholder="Re-enter new password"
+                      required
+                      style={{
+                        width: '100%',
+                        border: 'none',
+                        outline: 'none',
+                        background: 'transparent',
+                        fontSize: '0.96rem',
+                        color: '#1A1816',
+                        fontWeight: 500
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowResetConfirmPassword(!showResetConfirmPassword)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#8C7E74',
+                        cursor: 'pointer',
+                        padding: '4px'
+                      }}
+                    >
+                      {showResetConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+
+                {resetConfirmPassword.length > 0 && (
+                  <div
+                    style={{
+                      fontSize: '0.78rem',
+                      fontWeight: 700,
+                      color: resetNewPassword === resetConfirmPassword ? '#1B6A35' : '#C53030',
+                      marginTop: '-4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px'
+                    }}
+                  >
+                    {resetNewPassword === resetConfirmPassword ? (
+                      <>
+                        <CheckCircle2 size={13} />
+                        <span>Passwords match</span>
+                      </>
+                    ) : (
+                      <span>Passwords do not match yet</span>
+                    )}
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={resetLoading || !resetNewPassword || resetNewPassword !== resetConfirmPassword}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -811,366 +908,256 @@ export const CustomerAuthPage = () => {
                     width: '100%',
                     padding: '14px',
                     marginTop: '0.4rem',
-                    background: 'linear-gradient(135deg, #3A1F12 0%, #1A0F09 100%)',
-                    color: '#FFFFFF',
+                    background:
+                      resetNewPassword && resetNewPassword === resetConfirmPassword
+                        ? 'linear-gradient(135deg, #3A1F12 0%, #1A0F09 100%)'
+                        : '#E8DDD0',
+                    color: resetNewPassword && resetNewPassword === resetConfirmPassword ? '#FFFFFF' : '#8A7A6E',
                     border: 'none',
                     borderRadius: '16px',
                     fontSize: '1rem',
                     fontWeight: 700,
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 10px 24px rgba(45, 20, 10, 0.32)'
+                    cursor:
+                      resetLoading || !resetNewPassword || resetNewPassword !== resetConfirmPassword
+                        ? 'not-allowed'
+                        : 'pointer',
+                    boxShadow:
+                      resetNewPassword && resetNewPassword === resetConfirmPassword
+                        ? '0 10px 24px rgba(45, 20, 10, 0.32)'
+                        : 'none'
                   }}
                 >
-                  <span>{loading ? 'Processing...' : 'Sign In & Unlock Combos'}</span>
-                  <ArrowRight size={18} strokeWidth={2.4} />
-                </button>
-              </form>
-            ) : (
-              /* REGISTRATION FORM */
-              <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
-                {/* Admission Number */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#1A1816', marginBottom: '5px' }}>
-                    Admission Number *
-                  </label>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      background: '#FFFFFF',
-                      border: '1.5px solid #E8DDD0',
-                      borderRadius: '14px',
-                      padding: '5px 12px'
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '50%',
-                        background: '#F9F2EA',
-                        border: '1px solid #EADBCC',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0
-                      }}
-                    >
-                      <GraduationCap size={16} color="#9C5B32" />
-                    </div>
-                    <input
-                      type="text"
-                      value={regAdmissionNumber}
-                      onChange={(e) => setRegAdmissionNumber(e.target.value)}
-                      placeholder="e.g. JEC2024CS042"
-                      required
-                      style={{
-                        width: '100%',
-                        border: 'none',
-                        outline: 'none',
-                        background: 'transparent',
-                        fontSize: '0.92rem',
-                        color: '#1A1816',
-                        fontWeight: 600
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Full Name */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#1A1816', marginBottom: '5px' }}>
-                    Full Name *
-                  </label>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      background: '#FFFFFF',
-                      border: '1.5px solid #E8DDD0',
-                      borderRadius: '14px',
-                      padding: '5px 12px'
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '50%',
-                        background: '#F9F2EA',
-                        border: '1px solid #EADBCC',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0
-                      }}
-                    >
-                      <User size={16} color="#9C5B32" />
-                    </div>
-                    <input
-                      type="text"
-                      value={regName}
-                      onChange={(e) => setRegName(e.target.value)}
-                      placeholder="e.g. Rahul Sharma"
-                      required
-                      style={{
-                        width: '100%',
-                        border: 'none',
-                        outline: 'none',
-                        background: 'transparent',
-                        fontSize: '0.92rem',
-                        color: '#1A1816',
-                        fontWeight: 500
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Username */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#1A1816', marginBottom: '5px' }}>
-                    Username *
-                  </label>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      background: '#FFFFFF',
-                      border: '1.5px solid #E8DDD0',
-                      borderRadius: '14px',
-                      padding: '5px 12px'
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '50%',
-                        background: '#F9F2EA',
-                        border: '1px solid #EADBCC',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0
-                      }}
-                    >
-                      <AtSign size={16} color="#9C5B32" />
-                    </div>
-                    <input
-                      type="text"
-                      value={regUsername}
-                      onChange={(e) => setRegUsername(e.target.value)}
-                      placeholder="e.g. rahul_jec"
-                      required
-                      style={{
-                        width: '100%',
-                        border: 'none',
-                        outline: 'none',
-                        background: 'transparent',
-                        fontSize: '0.92rem',
-                        color: '#1A1816',
-                        fontWeight: 500
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Mail ID */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#1A1816', marginBottom: '5px' }}>
-                    Mail ID (Email) *
-                  </label>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      background: '#FFFFFF',
-                      border: '1.5px solid #E8DDD0',
-                      borderRadius: '14px',
-                      padding: '5px 12px'
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '50%',
-                        background: '#F9F2EA',
-                        border: '1px solid #EADBCC',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0
-                      }}
-                    >
-                      <Mail size={16} color="#9C5B32" />
-                    </div>
-                    <input
-                      type="email"
-                      value={regEmail}
-                      onChange={(e) => setRegEmail(e.target.value)}
-                      placeholder="e.g. rahul@jecc.ac.in"
-                      required
-                      style={{
-                        width: '100%',
-                        border: 'none',
-                        outline: 'none',
-                        background: 'transparent',
-                        fontSize: '0.92rem',
-                        color: '#1A1816',
-                        fontWeight: 500
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Select Café Name-Wise */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#1A1816', marginBottom: '5px' }}>
-                    Select Campus Dining Café *
-                  </label>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      background: '#FFFFFF',
-                      border: '1.5px solid #E8DDD0',
-                      borderRadius: '14px',
-                      padding: '5px 12px'
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '50%',
-                        background: '#F9F2EA',
-                        border: '1px solid #EADBCC',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0
-                      }}
-                    >
-                      <Store size={16} color="#9C5B32" />
-                    </div>
-                    <select
-                      value={regCafeName}
-                      onChange={(e) => setRegCafeName(e.target.value)}
-                      style={{
-                        width: '100%',
-                        border: 'none',
-                        outline: 'none',
-                        background: 'transparent',
-                        fontSize: '0.92rem',
-                        color: '#1A1816',
-                        fontWeight: 700
-                      }}
-                    >
-                      {cafes.map((c) => (
-                        <option key={c.slug} value={c.name}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Password */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#1A1816', marginBottom: '5px' }}>
-                    Password (min 6 chars) *
-                  </label>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      background: '#FFFFFF',
-                      border: '1.5px solid #E8DDD0',
-                      borderRadius: '14px',
-                      padding: '5px 12px'
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '50%',
-                        background: '#F9F2EA',
-                        border: '1px solid #EADBCC',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0
-                      }}
-                    >
-                      <Lock size={16} color="#9C5B32" />
-                    </div>
-                    <input
-                      type={showRegPassword ? 'text' : 'password'}
-                      value={regPassword}
-                      onChange={(e) => setRegPassword(e.target.value)}
-                      placeholder="Create secure password"
-                      required
-                      style={{
-                        width: '100%',
-                        border: 'none',
-                        outline: 'none',
-                        background: 'transparent',
-                        fontSize: '0.92rem',
-                        color: '#1A1816',
-                        fontWeight: 500
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowRegPassword(!showRegPassword)}
-                      aria-label={showRegPassword ? 'Hide password' : 'Show password'}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#8C7E74',
-                        cursor: 'pointer',
-                        padding: '4px'
-                      }}
-                    >
-                      {showRegPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '10px',
-                    width: '100%',
-                    padding: '13px',
-                    marginTop: '0.4rem',
-                    background: 'linear-gradient(135deg, #9C5B32 0%, #753E1B 100%)',
-                    color: '#FFFFFF',
-                    border: 'none',
-                    borderRadius: '14px',
-                    fontSize: '0.96rem',
-                    fontWeight: 800,
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 8px 20px rgba(156, 91, 50, 0.35)'
-                  }}
-                >
-                  <span>{loading ? 'Creating Profile...' : 'Complete Registration & Enter'}</span>
+                  <span>{resetLoading ? 'Saving New Password...' : 'Save New Password & Sign In'}</span>
                   <ArrowRight size={18} strokeWidth={2.4} />
                 </button>
               </form>
             )}
+
+            <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('login');
+                  setForgotStep('email');
+                  setResetErrorMsg('');
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#8C674E',
+                  fontWeight: 700,
+                  fontSize: '0.88rem',
+                  cursor: 'pointer',
+                  padding: '6px'
+                }}
+              >
+                ← Return to Sign In
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* SIGN IN FORM ONLY (REGISTRATION REMOVED) */
+          <div>
+            <h1
+              style={{
+                fontFamily: "'Fraunces', Georgia, serif",
+                fontSize: '1.95rem',
+                fontWeight: 800,
+                color: '#1A1816',
+                margin: '0 0 0.35rem',
+                letterSpacing: '-0.02em'
+              }}
+            >
+              Welcome to JEC Dining
+            </h1>
+            <p style={{ color: '#6E6258', fontSize: '0.88rem', marginBottom: '1.5rem', lineHeight: 1.55 }}>
+              Sign in to unlock Breakfast, Lunch, Tea/Snacks, and Dinner combos from JEC Cafe.
+            </p>
+
+            {errorMsg && (
+              <div
+                style={{
+                  background: '#FDF2F2',
+                  border: '1.5px solid #F8D7DA',
+                  borderRadius: '14px',
+                  padding: '10px 14px',
+                  color: '#9C2525',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  marginBottom: '1rem'
+                }}
+              >
+                {errorMsg}
+              </div>
+            )}
+
+            {/* LOGIN FORM */}
+            <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.86rem', fontWeight: 700, color: '#1A1816', marginBottom: '7px' }}>
+                  Username *
+                </label>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    background: '#FFFFFF',
+                    border: '1.5px solid #E8DDD0',
+                    borderRadius: '16px',
+                    padding: '6px 14px'
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '38px',
+                      height: '38px',
+                      borderRadius: '50%',
+                      background: '#F9F2EA',
+                      border: '1px solid #EADBCC',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}
+                  >
+                    <User size={18} color="#9C5B32" strokeWidth={2} />
+                  </div>
+                  <input
+                    type="text"
+                    value={loginIdentifier}
+                    onChange={(e) => setLoginIdentifier(e.target.value)}
+                    placeholder="Enter your username"
+                    required
+                    style={{
+                      width: '100%',
+                      border: 'none',
+                      outline: 'none',
+                      background: 'transparent',
+                      fontSize: '0.95rem',
+                      color: '#1A1816',
+                      fontWeight: 500
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '7px'
+                  }}
+                >
+                  <label style={{ fontSize: '0.86rem', fontWeight: 700, color: '#1A1816' }}>
+                    Password *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode('forgot');
+                      setForgotStep('email');
+                      setResetErrorMsg('');
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#9C5B32',
+                      fontWeight: 700,
+                      fontSize: '0.82rem',
+                      cursor: 'pointer',
+                      padding: 0
+                    }}
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    background: '#FFFFFF',
+                    border: '1.5px solid #E8DDD0',
+                    borderRadius: '16px',
+                    padding: '6px 14px'
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '38px',
+                      height: '38px',
+                      borderRadius: '50%',
+                      background: '#F9F2EA',
+                      border: '1px solid #EADBCC',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}
+                  >
+                    <Lock size={18} color="#9C5B32" strokeWidth={2} />
+                  </div>
+                  <input
+                    type={showLoginPassword ? 'text' : 'password'}
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    required
+                    style={{
+                      width: '100%',
+                      border: 'none',
+                      outline: 'none',
+                      background: 'transparent',
+                      fontSize: '0.95rem',
+                      color: '#1A1816',
+                      fontWeight: 500
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                    aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#8C7E74',
+                      cursor: 'pointer',
+                      padding: '4px'
+                    }}
+                  >
+                    {showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  width: '100%',
+                  padding: '14px',
+                  marginTop: '0.4rem',
+                  background: 'linear-gradient(135deg, #3A1F12 0%, #1A0F09 100%)',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '16px',
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 10px 24px rgba(45, 20, 10, 0.32)'
+                }}
+              >
+                <span>{loading ? 'Processing...' : 'Sign In & Unlock Combos'}</span>
+                <ArrowRight size={18} strokeWidth={2.4} />
+              </button>
+            </form>
 
             {/* Elegant footer note */}
             <div

@@ -219,11 +219,6 @@ export const LandingPage = () => {
   }, []);
 
   const handleCafeSelection = (slug) => {
-    if (!isAuthenticated) {
-      setTargetCafeAfterLogin(slug);
-      setShowLoginModal(true);
-      return;
-    }
     selectCafeBySlug(slug);
     navigate(`/${slug}`);
   };
@@ -409,6 +404,49 @@ export const LandingPage = () => {
           }
         }
 
+        /* Hero Text Slow Entrance from Right Animation */
+        @keyframes heroSlowSlideRight {
+          0% {
+            opacity: 0;
+            transform: translateX(85px);
+            filter: blur(5px);
+          }
+          60% {
+            opacity: 0.85;
+            filter: blur(1.5px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0);
+            filter: blur(0);
+          }
+        }
+
+        .hero-anim-pill {
+          animation: heroSlowSlideRight 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+          will-change: transform, opacity, filter;
+        }
+
+        .hero-anim-title {
+          animation: heroSlowSlideRight 1.35s cubic-bezier(0.16, 1, 0.3, 1) 0.28s both;
+          will-change: transform, opacity, filter;
+        }
+
+        .hero-anim-sub {
+          animation: heroSlowSlideRight 1.35s cubic-bezier(0.16, 1, 0.3, 1) 0.44s both;
+          will-change: transform, opacity, filter;
+        }
+
+        .hero-anim-cta {
+          animation: heroSlowSlideRight 1.35s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
+          will-change: transform, opacity, filter;
+        }
+
+        .hero-anim-features {
+          animation: heroSlowSlideRight 1.35s cubic-bezier(0.16, 1, 0.3, 1) 0.76s both;
+          will-change: transform, opacity, filter;
+        }
+
         /* Hero Image Container */
         .hero-visual-wrapper {
           position: relative;
@@ -546,46 +584,42 @@ export const LandingPage = () => {
           transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* 1st Row: Slides in from the RIGHT on scroll */
+        /* 1st Row & 2nd Row: One-by-One Card-Wise Cascade on Scroll */
         .features-row-right .feature-card-item {
           opacity: 0;
-          transform: translateX(85px);
-          transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+          transform: translateX(40px) translateY(35px) scale(0.95);
+          transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s, border-color 0.3s, background 0.3s;
           will-change: transform, opacity;
         }
 
-        /* 2nd Row: Slides in from the LEFT on scroll */
         .features-row-left .feature-card-item {
           opacity: 0;
-          transform: translateX(-85px);
-          transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+          transform: translateX(-40px) translateY(35px) scale(0.95);
+          transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s, border-color 0.3s, background 0.3s;
           will-change: transform, opacity;
         }
 
-        /* When revealed via scroll observer */
+        /* When revealed via scroll observer: Smoothly snap to place */
         .is-revealed .features-row-right .feature-card-item,
-        .landing-section.is-revealed .features-row-right .feature-card-item {
-          opacity: 1;
-          transform: translateX(0);
-        }
-
+        .landing-section.is-revealed .features-row-right .feature-card-item,
         .is-revealed .features-row-left .feature-card-item,
         .landing-section.is-revealed .features-row-left .feature-card-item {
           opacity: 1;
-          transform: translateX(0);
+          transform: translateX(0) translateY(0) scale(1);
         }
 
-        /* Staggered transition delays for Row 1 (from right) */
-        .features-row-right .feature-card-item:nth-child(1) { transition-delay: 0.06s; }
-        .features-row-right .feature-card-item:nth-child(2) { transition-delay: 0.16s; }
-        .features-row-right .feature-card-item:nth-child(3) { transition-delay: 0.26s; }
-        .features-row-right .feature-card-item:nth-child(4) { transition-delay: 0.36s; }
+        /* STRICT ONE-BY-ONE SEQUENTIAL CARD-WISE CASCADE (01 to 08) */
+        /* Row 1: Cards 01 to 04 */
+        .features-row-right .feature-card-item:nth-child(1) { transition-delay: 0.08s; }
+        .features-row-right .feature-card-item:nth-child(2) { transition-delay: 0.22s; }
+        .features-row-right .feature-card-item:nth-child(3) { transition-delay: 0.36s; }
+        .features-row-right .feature-card-item:nth-child(4) { transition-delay: 0.50s; }
 
-        /* Staggered transition delays for Row 2 (from left) */
-        .features-row-left .feature-card-item:nth-child(1) { transition-delay: 0.12s; }
-        .features-row-left .feature-card-item:nth-child(2) { transition-delay: 0.22s; }
-        .features-row-left .feature-card-item:nth-child(3) { transition-delay: 0.32s; }
-        .features-row-left .feature-card-item:nth-child(4) { transition-delay: 0.42s; }
+        /* Row 2: Cards 05 to 08 */
+        .features-row-left .feature-card-item:nth-child(1) { transition-delay: 0.64s; }
+        .features-row-left .feature-card-item:nth-child(2) { transition-delay: 0.78s; }
+        .features-row-left .feature-card-item:nth-child(3) { transition-delay: 0.92s; }
+        .features-row-left .feature-card-item:nth-child(4) { transition-delay: 1.06s; }
 
         /* Trust Badges Scroll Animation (Slide from Right) */
         .trust-badge-item {
@@ -808,12 +842,34 @@ export const LandingPage = () => {
           box-shadow: 0 6px 20px rgba(50, 30, 15, 0.035);
           position: relative;
           overflow: hidden;
-          transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+          opacity: 0;
+          transform: translateY(40px) scale(0.95);
+          transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1);
           display: flex;
           flex-direction: column;
+          will-change: transform, opacity;
         }
-        .about-pillar-card:hover {
-          transform: translateY(-6px);
+
+        .is-revealed .about-pillar-card,
+        .landing-section.is-revealed .about-pillar-card {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+
+        /* Staggered One-By-One Scroll Delays for the 3 Solution Cards */
+        .about-tri-grid .about-pillar-card:nth-child(1) {
+          transition-delay: 0.12s;
+        }
+        .about-tri-grid .about-pillar-card:nth-child(2) {
+          transition-delay: 0.32s;
+        }
+        .about-tri-grid .about-pillar-card:nth-child(3) {
+          transition-delay: 0.52s;
+        }
+
+        .is-revealed .about-pillar-card:hover,
+        .landing-section.is-revealed .about-pillar-card:hover {
+          transform: translateY(-6px) scale(1);
           box-shadow: 0 18px 36px rgba(140, 80, 40, 0.12);
           border-color: #DFC8B2;
         }
@@ -1203,12 +1259,7 @@ export const LandingPage = () => {
 
           <button
             onClick={() => {
-              if (isAuthenticated) {
-                navigate('/jeccafe');
-              } else {
-                setTargetCafeAfterLogin('jeccafe');
-                setShowLoginModal(true);
-              }
+              navigate('/jeccafe');
             }}
             className="header-nav-item"
           >
@@ -1275,10 +1326,7 @@ export const LandingPage = () => {
               </div>
             ) : (
               <button
-                onClick={() => {
-                  setTargetCafeAfterLogin('jeccafe');
-                  setShowLoginModal(true);
-                }}
+                onClick={() => navigate('/auth')}
                 className="btn"
                 style={{
                   background: '#1A1816',
@@ -1338,12 +1386,7 @@ export const LandingPage = () => {
           <button
             onClick={() => {
               setMobileMenuOpen(false);
-              if (isAuthenticated) {
-                navigate('/jeccafe');
-              } else {
-                setTargetCafeAfterLogin('jeccafe');
-                setShowLoginModal(true);
-              }
+              navigate('/jeccafe');
             }}
             className="mobile-nav-link"
           >
@@ -1417,8 +1460,7 @@ export const LandingPage = () => {
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  setTargetCafeAfterLogin('jeccafe');
-                  setShowLoginModal(true);
+                  navigate('/auth');
                 }}
                 className="btn"
                 style={{
@@ -1456,48 +1498,57 @@ export const LandingPage = () => {
         {/* Left Column: Heading & Value Proposition */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', zIndex: 2 }}>
           {/* Tag Pill */}
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            fontSize: '0.8rem',
-            fontWeight: 800,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            color: '#78604F'
-          }}>
+          <div
+            className="hero-anim-pill"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '0.8rem',
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: '#78604F'
+            }}
+          >
             <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#8A5838' }} />
             <span>GOOD FOOD • BRIGHTER DAYS</span>
           </div>
 
           {/* Headline in Editorial Serif matching user mockup */}
-          <h1 style={{
-            fontFamily: "'Fraunces', Georgia, serif",
-            fontSize: 'clamp(2.15rem, 5.2vw, 4.5rem)',
-            fontWeight: 800,
-            lineHeight: 1.05,
-            letterSpacing: '-0.035em',
-            color: '#1A1816',
-            margin: 0
-          }}>
+          <h1
+            className="hero-anim-title"
+            style={{
+              fontFamily: "'Fraunces', Georgia, serif",
+              fontSize: 'clamp(2.15rem, 5.2vw, 4.5rem)',
+              fontWeight: 800,
+              lineHeight: 1.05,
+              letterSpacing: '-0.035em',
+              color: '#1A1816',
+              margin: 0
+            }}
+          >
             Two Cafés.<br />
             One Campus<br />
             <span style={{ fontStyle: 'italic', color: '#8A502E', fontWeight: 600 }}>Experience.</span>
           </h1>
 
           {/* Subheading */}
-          <p style={{
-            fontSize: 'clamp(0.95rem, 1.35vw, 1.12rem)',
-            color: '#5C5650',
-            lineHeight: 1.62,
-            maxWidth: '460px',
-            margin: 0
-          }}>
+          <p
+            className="hero-anim-sub"
+            style={{
+              fontSize: 'clamp(0.95rem, 1.35vw, 1.12rem)',
+              color: '#5C5650',
+              lineHeight: 1.62,
+              maxWidth: '460px',
+              margin: 0
+            }}
+          >
             Order your favourite meals and combos from JEC Cafe and JEC Bytes. Fresh food, great taste, and a better campus dining experience — all in one place.
           </p>
 
           {/* Action CTA (Get Started with Circular Arrow Badge matching User Mockup) */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px', marginTop: '0.35rem' }}>
+          <div className="hero-anim-cta" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px', marginTop: '0.35rem' }}>
             <button
               onClick={() => handleCafeSelection('jeccafe')}
               className="btn"
@@ -1542,14 +1593,17 @@ export const LandingPage = () => {
           </div>
 
           {/* 3 Feature Pills matching User Reference Image */}
-          <div style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            gap: '14px 20px',
-            marginTop: '1.25rem',
-            paddingTop: '0.5rem'
-          }}>
+          <div
+            className="hero-anim-features"
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              gap: '14px 20px',
+              marginTop: '1.25rem',
+              paddingTop: '0.5rem'
+            }}
+          >
             {/* Feature 1: Fresh Food */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={{
@@ -1916,7 +1970,7 @@ export const LandingPage = () => {
                 IconComponent: ShieldCheck,
                 title: 'Secure Login',
                 desc: 'Your data and orders stay safe with us',
-                action: () => setShowLoginModal(true)
+                action: () => navigate(isAuthenticated ? '/my-orders' : '/auth')
               },
             ].map((item, i) => {
               const CardIcon = item.IconComponent;
@@ -2295,7 +2349,7 @@ export const LandingPage = () => {
 
               <div style={{ marginTop: '1.15rem', position: 'relative', zIndex: 2 }}>
                 <button
-                  onClick={() => handleCafeSelection('jec-bytest')}
+                  onClick={() => handleCafeSelection('jecbytes')}
                   className="cafe-view-btn"
                   style={{
                     background: '#1A120B',
@@ -2514,7 +2568,7 @@ export const LandingPage = () => {
           </div>
 
           {/* 3. Bottom 3 Highlight Solution Cards */}
-          <div className="about-tri-grid story-scroll-item story-item-delay-3">
+          <div className="about-tri-grid">
             {/* Card 1: Skip the Mess Rush */}
             <div className="about-pillar-card">
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '0.85rem' }}>
@@ -2860,6 +2914,15 @@ export const LandingPage = () => {
                   Support
                 </button>
               </li>
+              <li>
+                <Link
+                  to="/admin/login"
+                  className="footer-nav-link"
+                  style={{ color: '#8B5838', fontWeight: 700 }}
+                >
+                  Admin / Manager Login →
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -3195,7 +3258,7 @@ export const LandingPage = () => {
                 zIndex: 2
               }}
             >
-              Sign in to unlock Breakfast, Lunch, Tea/Snacks, and Dinner combos from {targetCafeAfterLogin === 'jec-bytest' ? 'JEC Bytes' : 'JEC Cafe'}.
+              Sign in to unlock Breakfast, Lunch, Tea/Snacks, and Dinner combos from {(targetCafeAfterLogin && targetCafeAfterLogin.includes('byte')) ? 'JEC Bytes' : 'JEC Cafe'}.
             </p>
 
             {/* Login Form: USERNAME AND PASSWORD ONLY (NO 1-CLICK BUTTON) */}
@@ -3211,7 +3274,7 @@ export const LandingPage = () => {
                     marginBottom: '7px'
                   }}
                 >
-                  Email or Username
+                  Username or Email
                 </label>
                 <div
                   style={{
@@ -3245,7 +3308,7 @@ export const LandingPage = () => {
                     type="text"
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
-                    placeholder="Enter your email"
+                    placeholder="Enter your username or email"
                     required
                     style={{
                       width: '100%',
@@ -3281,7 +3344,10 @@ export const LandingPage = () => {
                   </label>
                   <button
                     type="button"
-                    onClick={() => setShowForgotModal(true)}
+                    onClick={() => {
+                      setShowLoginModal(false);
+                      navigate('/auth?mode=forgot');
+                    }}
                     style={{
                       background: 'none',
                       border: 'none',
@@ -3399,6 +3465,34 @@ export const LandingPage = () => {
                 <ArrowRight size={18} strokeWidth={2.4} />
               </button>
             </form>
+
+            {/* Direct Link to Full Campus Auth Portal */}
+            <div style={{ textAlign: 'center', marginTop: '0.9rem' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLoginModal(false);
+                  navigate('/auth');
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#9C5B32',
+                  fontSize: '0.86rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '4px'
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+              >
+                <span>Or open Campus Auth Portal (/auth)</span>
+                <ArrowRight size={14} />
+              </button>
+            </div>
 
             {/* Bottom Elegant Card Footer (Matches reference screenshot) */}
             <div

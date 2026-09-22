@@ -17,7 +17,6 @@ export const AdminSettingsPage = () => {
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [taxRatePercent, setTaxRatePercent] = useState(5.0);
   const [isOpenOverride, setIsOpenOverride] = useState('auto'); // 'auto', 'open', 'closed'
 
   // Password Change fields
@@ -41,7 +40,6 @@ export const AdminSettingsPage = () => {
         setAddress(c.address || '');
         setPhone(c.phone || '');
         setEmail(c.email || '');
-        setTaxRatePercent(c.taxRatePercent || 5.0);
         setIsOpenOverride(c.isOpenOverride === true ? 'open' : c.isOpenOverride === false ? 'closed' : 'auto');
       }
     } catch (err) {
@@ -61,7 +59,6 @@ export const AdminSettingsPage = () => {
         address,
         phone,
         email,
-        taxRatePercent: parseFloat(taxRatePercent),
         isOpenOverride: isOpenOverride === 'open' ? true : isOpenOverride === 'closed' ? false : null
       };
 
@@ -99,17 +96,17 @@ export const AdminSettingsPage = () => {
   return (
     <div>
       <AdminHeader
-        title="Café Configuration & Security"
-        subtitle={`Operating hours, taxes, store details and security for ${user?.cafe?.name}`}
+        title="Café Configuration & Profile"
+        subtitle={`Operating hours, store details and security for ${user?.cafe?.name}`}
       />
 
-      <div style={{ padding: '2rem', maxWidth: '860px', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <div className="admin-page-container" style={{ maxWidth: '860px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         {/* Cafe Profile Form */}
-        <div className="card" style={{ padding: '2rem' }}>
+        <div className="card" style={{ padding: 'clamp(1.15rem, 3vw, 2rem)' }}>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.25rem' }}>Store Profile & Timings</h2>
 
           <form onSubmit={handleSaveSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
               <div className="form-group">
                 <label className="form-label">Café Name</label>
                 <input
@@ -144,7 +141,7 @@ export const AdminSettingsPage = () => {
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
               <div className="form-group">
                 <label className="form-label">Operating Hours Display</label>
                 <input
@@ -182,7 +179,7 @@ export const AdminSettingsPage = () => {
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
               <div className="form-group">
                 <label className="form-label">Store Contact Phone</label>
                 <input
@@ -217,7 +214,7 @@ export const AdminSettingsPage = () => {
         </div>
 
         {/* Change Administrator Password Form */}
-        <div className="card" style={{ padding: '2rem' }}>
+        <div className="card" style={{ padding: 'clamp(1.15rem, 3vw, 2rem)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.25rem' }}>
             <Lock size={20} color="var(--brand-accent)" />
             <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>Change Administrator Password</h2>

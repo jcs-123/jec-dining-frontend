@@ -1,29 +1,72 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { api } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
-import { Lock, Eye, EyeOff, CheckCircle2, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Lock, Eye, EyeOff, CheckCircle2, ArrowRight, ShieldCheck, Mail, KeyRound, RotateCcw } from 'lucide-react';
 
 export const ResetPasswordPage = () => {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token') || '';
+  const tokenParam = searchParams.get('token') || '';
+  const emailParam = searchParams.get('email') || '';
+  const otpParam = searchParams.get('otp') || '';
   const navigate = useNavigate();
   const toast = useToast();
 
+  const [email, setEmail] = useState(emailParam);
+  const [otp, setOtp] = useState(otpParam);
+  const [token] = useState(tokenParam);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resendingOtp, setResendingOtp] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  useEffect(() => {
+    let timer;
+    if (resendCooldown > 0) {
+      timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
+
+  const handleResendOtp = async () => {
+    if (!email.trim()) {
+      setErrorMsg('Please enter your email above before requesting a new OTP.');
+      return;
+    }
+    try {
+      setResendingOtp(true);
+      setErrorMsg('');
+      const res = await api.post('/auth/forgot-password', { email: email.trim() });
+      if (res.success) {
+        setResendCooldown(30);
+        const msg = res.message || `New 6-digit OTP code sent to ${email}`;
+        toast.showSuccess ? toast.showSuccess(msg) : (toast.success && toast.success(msg));
+      }
+    } catch (err) {
+      const msg = err.message || 'Failed to resend OTP. Please try again.';
+      setErrorMsg(msg);
+      toast.showError ? toast.showError(msg) : (toast.error && toast.error(msg));
+    } finally {
+      setResendingOtp(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
-    if (!token) {
-      setErrorMsg('Invalid or missing password reset token. Please request a new link.');
+    if (!token && (!otp.trim() || otp.trim().length !== 6)) {
+      setErrorMsg('Please enter the valid 6-digit OTP code sent to your email.');
+      return;
+    }
+
+    if (!token && !email.trim()) {
+      setErrorMsg('Please enter your registered email address.');
       return;
     }
 
@@ -40,18 +83,21 @@ export const ResetPasswordPage = () => {
     try {
       setLoading(true);
       const res = await api.post('/auth/reset-password', {
-        token,
-        newPassword: password
+        email: email.trim() || undefined,
+        otp: otp.trim() || undefined,
+        token: token || undefined,
+        newPassword: password,
+        confirmPassword
       });
 
       if (res.success) {
         setSuccess(true);
-        toast.success('Password reset successfully! You can now sign in.');
+        toast.showSuccess ? toast.showSuccess('Password reset successfully! You can now sign in.') : (toast.success && toast.success('Password reset successfully!'));
       }
     } catch (err) {
-      const msg = err.message || 'Failed to reset password. The link may have expired.';
+      const msg = err.message || 'Failed to reset password. The OTP or link may have expired.';
       setErrorMsg(msg);
-      toast.error(msg);
+      toast.showError ? toast.showError(msg) : (toast.error && toast.error(msg));
     } finally {
       setLoading(false);
     }
@@ -235,6 +281,138 @@ export const ResetPasswordPage = () => {
             )}
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+              {!token && (
+                <>
+                  {/* Campus Email */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.86rem', fontWeight: 700, color: '#1A1816', marginBottom: '7px' }}>
+                      Registered Campus Email *
+                    </label>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        background: '#FFFFFF',
+                        border: '1.5px solid #E8DDD0',
+                        borderRadius: '16px',
+                        padding: '6px 14px'
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '38px',
+                          height: '38px',
+                          borderRadius: '50%',
+                          background: '#F9F2EA',
+                          border: '1px solid #EADBCC',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}
+                      >
+                        <Mail size={18} color="#9C5B32" strokeWidth={2} />
+                      </div>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="e.g. student@jecc.ac.in"
+                        required
+                        style={{
+                          width: '100%',
+                          border: 'none',
+                          outline: 'none',
+                          background: 'transparent',
+                          fontSize: '0.96rem',
+                          color: '#1A1816',
+                          fontWeight: 500
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* 6-Digit OTP */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '7px' }}>
+                      <label style={{ fontSize: '0.86rem', fontWeight: 700, color: '#1A1816' }}>
+                        Enter 6-Digit OTP *
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleResendOtp}
+                        disabled={resendingOtp || resendCooldown > 0}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: resendCooldown > 0 ? '#8C7E74' : '#C86D44',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          letterSpacing: '0.03em',
+                          cursor: resendingOtp || resendCooldown > 0 ? 'not-allowed' : 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: 0
+                        }}
+                      >
+                        <RotateCcw size={12} />
+                        <span>{resendingOtp ? 'Resending...' : resendCooldown > 0 ? `Resend (${resendCooldown}s)` : 'Resend OTP'}</span>
+                      </button>
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        background: '#FFFFFF',
+                        border: '1.5px solid #E8DDD0',
+                        borderRadius: '16px',
+                        padding: '6px 14px'
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '38px',
+                          height: '38px',
+                          borderRadius: '50%',
+                          background: '#FDF1EB',
+                          border: '1px solid #F0DAC9',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}
+                      >
+                        <ShieldCheck size={18} color="#C86D44" strokeWidth={2.2} />
+                      </div>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={6}
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="6-digit code"
+                        required
+                        style={{
+                          width: '100%',
+                          border: 'none',
+                          outline: 'none',
+                          background: 'transparent',
+                          fontSize: '1.1rem',
+                          fontWeight: 700,
+                          letterSpacing: '0.2em',
+                          color: '#1A1816',
+                          fontFamily: 'monospace'
+                        }}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
               {/* New Password */}
               <div>
                 <label style={{ display: 'block', fontSize: '0.86rem', fontWeight: 700, color: '#1A1816', marginBottom: '7px' }}>
@@ -360,6 +538,29 @@ export const ResetPasswordPage = () => {
                   </button>
                 </div>
               </div>
+
+              {confirmPassword.length > 0 && (
+                <div
+                  style={{
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    color: password === confirmPassword ? '#1B6A35' : '#C53030',
+                    marginTop: '-4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px'
+                  }}
+                >
+                  {password === confirmPassword ? (
+                    <>
+                      <CheckCircle2 size={13} />
+                      <span>Passwords match</span>
+                    </>
+                  ) : (
+                    <span>Passwords do not match yet</span>
+                  )}
+                </div>
+              )}
 
               <button
                 type="submit"

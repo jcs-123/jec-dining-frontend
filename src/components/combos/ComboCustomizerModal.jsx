@@ -30,7 +30,7 @@ export const ComboCustomizerModal = ({ isOpen, onClose, combo, cafe, onAddToCart
     }
   }, [combo]);
 
-  const effectiveBasePrice = combo.offerPricePaise != null ? combo.offerPricePaise : combo.basePricePaise;
+  const effectiveBasePrice = combo.basePricePaise;
 
   // Compute total extras
   const totalExtrasPaise = Object.values(selections).reduce((sum, opts) => {
