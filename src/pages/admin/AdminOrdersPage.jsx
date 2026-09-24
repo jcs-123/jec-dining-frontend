@@ -141,9 +141,11 @@ export const AdminOrdersPage = () => {
     }
   };
 
-  const loadOrders = async () => {
+  const loadOrders = async (isExplicit = false) => {
     try {
-      setLoading(true);
+      if (isExplicit || orders.length === 0) {
+        setLoading(true);
+      }
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '15'
@@ -322,7 +324,7 @@ export const AdminOrdersPage = () => {
         {/* 2. Filter Toolbar */}
         <div className="orders-filter-card">
           <form onSubmit={handleSearchSubmit} className="orders-filter-row">
-            <div style={{ position: 'relative', flex: '1 1 260px', display: 'flex', alignItems: 'center' }}>
+            <div className="orders-search-input-wrap" style={{ position: 'relative', flex: '1 1 260px', display: 'flex', alignItems: 'center' }}>
               <Search
                 size={16}
                 style={{
@@ -357,8 +359,7 @@ export const AdminOrdersPage = () => {
               <Calendar size={16} className="orders-date-picker-icon" />
               <input
                 type="date"
-                className="form-input orders-date-input"
-                style={{ paddingRight: selectedDate ? '34px' : '14px' }}
+                className={`form-input orders-date-input ${selectedDate ? 'has-value' : ''}`}
                 value={selectedDate}
                 onChange={(e) => { setSelectedDate(e.target.value); setPage(1); }}
                 onClick={(e) => {
@@ -378,10 +379,18 @@ export const AdminOrdersPage = () => {
               )}
             </div>
 
-            <div style={{ position: 'relative', flex: '0 1 185px', minWidth: '160px' }}>
+            <div className="orders-status-select-wrap" style={{ position: 'relative', flex: '0 1 190px', minWidth: '165px' }}>
               <select
                 className="form-select"
-                style={{ borderRadius: '10px', borderColor: '#EADBCC', fontSize: '0.86rem', height: '40px', width: '100%' }}
+                style={{
+                  borderRadius: '10px',
+                  borderColor: '#EADBCC',
+                  fontSize: '0.84rem',
+                  height: '40px',
+                  width: '100%',
+                  paddingRight: '28px',
+                  boxSizing: 'border-box'
+                }}
                 value={orderStatus}
                 onChange={(e) => { setOrderStatus(e.target.value); setPage(1); }}
               >
@@ -397,7 +406,7 @@ export const AdminOrdersPage = () => {
 
             <button
               type="submit"
-              className="btn btn-primary"
+              className="btn btn-primary orders-search-btn"
               style={{
                 height: '40px',
                 padding: '0 1.25rem',
@@ -436,7 +445,7 @@ export const AdminOrdersPage = () => {
             </button>
           </div>
 
-          {loading ? (
+          {loading && orders.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3.5rem 1rem', color: '#7A6E63' }}>
               <RefreshCw size={24} className="animate-spin" style={{ margin: '0 auto 10px', display: 'block', color: '#D66C3E' }} />
               Loading live orders...
@@ -446,7 +455,7 @@ export const AdminOrdersPage = () => {
               No orders found matching the selected filters.
             </div>
           ) : (
-            <>
+            <div style={{ opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s ease' }}>
               {/* 4. Desktop & Tablet Table View with Exact Requested Columns:
                      Order ID | Customer Name & Phone | Pickup Schedule | Combo Name | Total | Action */}
               <div className="desktop-orders-table table-responsive" style={{ margin: 0 }}>
@@ -509,9 +518,11 @@ export const AdminOrdersPage = () => {
                             <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#1E140E' }}>
                               {o.pickupDate || new Date(o.createdAt).toISOString().split('T')[0]}
                             </div>
-                            <div style={{ fontSize: '0.74rem', color: '#D66C3E', fontWeight: 700, marginTop: '2px' }}>
-                              {o.pickupTimeSlot || 'Immediate (15–20 mins)'}
-                            </div>
+                            {o.pickupTimeSlot && !o.pickupTimeSlot.toLowerCase().includes('immediate') && (
+                              <div style={{ fontSize: '0.74rem', color: '#D66C3E', fontWeight: 700, marginTop: '2px' }}>
+                                {o.pickupTimeSlot}
+                              </div>
+                            )}
                           </td>
 
                           {/* 4. Combo Name (Clickable to view detailed items!) */}
@@ -545,11 +556,6 @@ export const AdminOrdersPage = () => {
                           {/* 5. Total */}
                           <td style={{ fontWeight: 800, color: '#1E140E', fontSize: '0.94rem', padding: '14px 16px' }}>
                             {formatINR(o.totalPaise)}
-                            <div style={{ fontSize: '0.7rem', fontWeight: 700, marginTop: '2px' }}>
-                              <span style={{ color: o.paymentStatus === 'Paid' ? '#16A34A' : '#D97706' }}>
-                                {o.paymentStatus}
-                              </span>
-                            </div>
                           </td>
 
                           {/* 6. ACTION: ONLY DELIVER BUTTON */}
@@ -659,12 +665,13 @@ export const AdminOrdersPage = () => {
                       {/* Pickup Schedule */}
                       <div style={{ background: '#FAF6EE', padding: '6px 10px', borderRadius: '8px', fontSize: '0.76rem' }}>
                         <span style={{ fontWeight: 700, color: '#1E140E' }}>
-                          {o.pickupDate || new Date(o.createdAt).toISOString().split('T')[0]}
+                          Pickup: {o.pickupDate || new Date(o.createdAt).toISOString().split('T')[0]}
                         </span>
-                        {' • '}
-                        <span style={{ color: '#D66C3E', fontWeight: 700 }}>
-                          {o.pickupTimeSlot || 'Immediate (15–20 mins)'}
-                        </span>
+                        {o.pickupTimeSlot && !o.pickupTimeSlot.toLowerCase().includes('immediate') && (
+                          <span style={{ color: '#D66C3E', fontWeight: 700, marginLeft: '6px' }}>
+                            • {o.pickupTimeSlot}
+                          </span>
+                        )}
                       </div>
 
                       {/* Combo Name (Clickable to view detailed items!) */}
@@ -699,12 +706,6 @@ export const AdminOrdersPage = () => {
                             {formatINR(o.totalPaise)}
                           </span>
                         </div>
-                        <span
-                          className={`badge ${o.paymentStatus === 'Paid' ? 'badge-status-completed' : 'badge-status-pending'}`}
-                          style={{ fontSize: '0.68rem', fontWeight: 800 }}
-                        >
-                          {o.paymentStatus}
-                        </span>
                       </div>
 
                       {/* ACTION: ONLY DELIVER BUTTON ON MOBILE */}
@@ -772,7 +773,7 @@ export const AdminOrdersPage = () => {
                   );
                 })}
               </div>
-            </>
+            </div>
           )}
 
           {/* Pagination */}
@@ -907,11 +908,7 @@ export const AdminOrdersPage = () => {
                 </div>
                 <div>
                   <span style={{ color: '#8C7E74', display: 'block', fontSize: '0.7rem' }}>Pickup Date</span>
-                  <span style={{ color: '#1E140E', fontWeight: 600 }}>{inspectingOrder.pickupDate || 'Today'}</span>
-                </div>
-                <div>
-                  <span style={{ color: '#8C7E74', display: 'block', fontSize: '0.7rem' }}>Time Slot</span>
-                  <span style={{ color: '#D66C3E', fontWeight: 700 }}>{inspectingOrder.pickupTimeSlot || 'Immediate'}</span>
+                  <span style={{ color: '#1E140E', fontWeight: 700 }}>{inspectingOrder.pickupDate || 'Today'}</span>
                 </div>
               </div>
 
@@ -939,10 +936,10 @@ export const AdminOrdersPage = () => {
                         </div>
 
                         {/* Fixed / Components if populated */}
-                        {item.comboId?.fixedItems && item.comboId.fixedItems.length > 0 && (
+                        {((item.fixedItemsSnapshot && item.fixedItemsSnapshot.length > 0) || (item.comboId?.fixedItems && item.comboId.fixedItems.length > 0)) && (
                           <div style={{ marginTop: '6px', background: '#FAF6EE', padding: '6px 8px', borderRadius: '8px', fontSize: '0.74rem' }}>
-                            <div style={{ fontWeight: 700, color: '#7A6E63', marginBottom: '2px' }}>Contains:</div>
-                            {item.comboId.fixedItems.map((fi, fidx) => (
+                            <div style={{ fontWeight: 700, color: '#7A6E63', marginBottom: '2px' }}>Contains (Meal Components):</div>
+                            {(item.fixedItemsSnapshot && item.fixedItemsSnapshot.length > 0 ? item.fixedItemsSnapshot : item.comboId.fixedItems).map((fi, fidx) => (
                               <div key={fidx} style={{ color: '#382A20' }}>
                                 • {fi.quantity}x {fi.name}
                               </div>
@@ -983,12 +980,30 @@ export const AdminOrdersPage = () => {
                 alignItems: 'center'
               }}>
                 <div>
-                  <div style={{ fontSize: '0.75rem', color: '#7A6E63' }}>Payment Status</div>
-                  <span className={`badge ${inspectingOrder.paymentStatus === 'Paid' ? 'badge-status-completed' : 'badge-status-pending'}`}>
-                    {inspectingOrder.paymentStatus}
+                  <div style={{ fontSize: '0.75rem', color: '#7A6E63' }}>Order Status</div>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      marginTop: '4px',
+                      fontSize: '0.74rem',
+                      fontWeight: 800,
+                      background: '#DCFCE7',
+                      color: '#15803D',
+                      border: '1px solid #86EFAC',
+                      padding: '2px 8px',
+                      borderRadius: '10px'
+                    }}
+                  >
+                    {inspectingOrder.orderStatus}
                   </span>
                 </div>
                 <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#7A6E63', marginBottom: '2px' }}>
+                    Subtotal: <strong>{formatINR(inspectingOrder.subtotalPaise)}</strong>
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: '#7A6E63', marginBottom: '4px' }}>
+                    Tax: <strong>{formatINR(inspectingOrder.taxPaise || 0)}</strong>
+                  </div>
                   <div style={{ fontSize: '0.75rem', color: '#7A6E63' }}>Grand Total</div>
                   <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E140E' }}>
                     {formatINR(inspectingOrder.totalPaise)}

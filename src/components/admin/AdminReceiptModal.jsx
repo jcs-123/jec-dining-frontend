@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   Printer,
   X,
@@ -15,9 +15,18 @@ import {
   Download
 } from 'lucide-react';
 import { formatINR, formatKolkataTime } from '../../utils/formatters';
+import { generateQrDataUrl } from '../../utils/qrCode';
 
 export const AdminReceiptModal = ({ order, cafe, isOpen, onClose }) => {
   const receiptRef = useRef(null);
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
+
+  useEffect(() => {
+    if (order?.orderNumber || order?._id) {
+      const qrData = order.orderNumber || order._id;
+      generateQrDataUrl(qrData).then(setQrCodeUrl);
+    }
+  }, [order?.orderNumber, order?._id]);
 
   if (!isOpen || !order) return null;
 
@@ -90,12 +99,12 @@ export const AdminReceiptModal = ({ order, cafe, isOpen, onClose }) => {
                 fontWeight: 800,
                 padding: '2px 8px',
                 borderRadius: '12px',
-                background: order.paymentStatus === 'PAID' ? '#DCFCE7' : '#FEF3C7',
-                color: order.paymentStatus === 'PAID' ? '#15803D' : '#92400E',
-                border: `1px solid ${order.paymentStatus === 'PAID' ? '#86EFAC' : '#FDE68A'}`
+                background: '#DCFCE7',
+                color: '#15803D',
+                border: '1px solid #86EFAC'
               }}
             >
-              {order.paymentStatus === 'PAID' ? 'PAID IN FULL' : 'PAYMENT PENDING'}
+              {order.paymentStatus || 'Cash on Delivery'}
             </span>
           </div>
 
@@ -240,7 +249,7 @@ export const AdminReceiptModal = ({ order, cafe, isOpen, onClose }) => {
               #{order.orderNumber}
             </div>
             <div style={{ fontSize: '0.76rem', color: '#5C5046', fontWeight: 600 }}>
-              Scheduled for: <strong>{order.pickupDate || 'Today'}</strong> • {order.pickupTimeSlot || 'Standard Slot'}
+              Scheduled for: <strong>{order.pickupDate || 'Today'}</strong>
             </div>
           </div>
 
@@ -273,7 +282,7 @@ export const AdminReceiptModal = ({ order, cafe, isOpen, onClose }) => {
             <div>
               <span style={{ color: '#8C7E74', display: 'block', fontSize: '0.7rem' }}>Payment Mode</span>
               <span style={{ color: '#1E140E', fontWeight: 600 }}>
-                {order.paymentDetails?.provider || 'Campus Pay'} ({order.paymentStatus})
+                {order.paymentStatus || 'Cash on Delivery'}
               </span>
             </div>
           </div>
@@ -348,6 +357,11 @@ export const AdminReceiptModal = ({ order, cafe, isOpen, onClose }) => {
               <span>{formatINR(order.subtotalPaise)}</span>
             </div>
 
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#5C5046', marginBottom: '6px' }}>
+              <span>Tax / GST</span>
+              <span>{formatINR(order.taxPaise || 0)}</span>
+            </div>
+
             <div
               style={{
                 display: 'flex',
@@ -360,7 +374,7 @@ export const AdminReceiptModal = ({ order, cafe, isOpen, onClose }) => {
               }}
             >
               <span style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '1.15rem', fontWeight: 800, color: '#1E140E' }}>
-                Total Paid
+                Total Amount
               </span>
               <span
                 style={{
@@ -389,13 +403,17 @@ export const AdminReceiptModal = ({ order, cafe, isOpen, onClose }) => {
             <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#7A6E63', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: '8px' }}>
               COUNTER PICKUP QR VERIFICATION
             </div>
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/admin/verify-pickup/${order._id}`)}`}
-              alt="Order Verification QR"
-              width="130"
-              height="130"
-              style={{ display: 'block', margin: '0 auto', borderRadius: '8px' }}
-            />
+            {qrCodeUrl ? (
+              <img
+                src={qrCodeUrl}
+                alt="Order Verification QR"
+                width="130"
+                height="130"
+                style={{ display: 'block', margin: '0 auto', borderRadius: '8px' }}
+              />
+            ) : (
+              <div style={{ width: '130px', height: '130px', margin: '0 auto', background: '#F8FAFC', borderRadius: '8px' }} />
+            )}
             <div style={{ fontSize: '0.7rem', color: '#9C8E84', marginTop: '6px' }}>
               Scan at café checkout terminal to verify handover
             </div>

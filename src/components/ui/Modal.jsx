@@ -25,7 +25,7 @@ export const Modal = ({ isOpen, onClose, title, children, footer, maxWidth = '54
         aria-modal="true"
       >
         <div className="modal-header">
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 700 }}>{title}</h3>
+          <h3 className="modal-title">{title}</h3>
           <button
             onClick={onClose}
             className="btn btn-ghost btn-sm"

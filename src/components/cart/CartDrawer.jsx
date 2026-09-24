@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { formatINR } from '../../utils/formatters';
-import { X, Trash2, Plus, Minus, ArrowRight, ShoppingBag, Calendar } from 'lucide-react';
+import { X, Trash2, ArrowRight, ArrowLeft, ShoppingBag, Calendar } from 'lucide-react';
 
 export const CartDrawer = () => {
   const {
@@ -10,7 +10,6 @@ export const CartDrawer = () => {
     cartCafe,
     isCartOpen,
     setIsCartOpen,
-    updateQuantity,
     removeItem,
     clearCart,
     subtotalPaise,
@@ -89,26 +88,50 @@ export const CartDrawer = () => {
               </div>
             </div>
 
-            {/* Circular frosted close button */}
-            <button
-              onClick={() => setIsCartOpen(false)}
-              style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '50%',
-                border: '1px solid rgba(255, 255, 255, 0.16)',
-                background: 'rgba(255, 255, 255, 0.08)',
-                color: '#FFFFFF',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'background 0.15s ease'
-              }}
-              aria-label="Close Cart"
-            >
-              <X size={18} />
-            </button>
+            {/* Top Right Action: Back Button + Close button */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                onClick={() => setIsCartOpen(false)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  color: '#FFFFFF',
+                  padding: '6px 12px',
+                  borderRadius: '20px',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+                aria-label="Back to Menu"
+              >
+                <ArrowLeft size={13} />
+                <span>Back</span>
+              </button>
+
+              <button
+                onClick={() => setIsCartOpen(false)}
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  border: '1px solid rgba(255, 255, 255, 0.16)',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  color: '#FFFFFF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s ease'
+                }}
+                aria-label="Close Cart"
+              >
+                <X size={17} />
+              </button>
+            </div>
           </div>
 
           {/* Fine divider with luxury quote */}
@@ -198,7 +221,10 @@ export const CartDrawer = () => {
                 Browse through our signature combos and add your favorites to get started.
               </p>
               <button
-                onClick={() => setIsCartOpen(false)}
+                onClick={() => {
+                  setIsCartOpen(false);
+                  navigate('/' + (cartCafe?.slug || 'jeccafe'));
+                }}
                 style={{
                   padding: '0.55rem 1.25rem',
                   borderRadius: '20px',
@@ -262,7 +288,7 @@ export const CartDrawer = () => {
                         color: '#211712',
                         whiteSpace: 'nowrap'
                       }}>
-                        {formatINR(item.unitPricePaise * item.quantity)}
+                        {formatINR(item.unitPricePaise)}
                       </span>
                     </div>
 
@@ -294,74 +320,48 @@ export const CartDrawer = () => {
                       </div>
                     )}
 
-                    {/* Unit Price & Stepper Row */}
+                    {/* Price & Delete Icon Only */}
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      marginTop: '4px'
+                      marginTop: '6px'
                     }}>
-                      <span style={{ fontSize: '0.78rem', color: '#756B65' }}>
-                        {formatINR(item.unitPricePaise)} each
+                      <span style={{ fontSize: '0.8rem', color: '#756B65' }}>
+                        Price: {formatINR(item.unitPricePaise)}
                       </span>
 
-                      {/* Stepper */}
-                      <div style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        background: '#FAF6F0',
-                        border: '1px solid #E8DDD2',
-                        borderRadius: '8px',
-                        padding: '2px 4px'
-                      }}>
-                        <button
-                          type="button"
-                          onClick={() => updateQuantity(item.customKey, item.quantity - 1)}
-                          style={{
-                            width: '24px',
-                            height: '24px',
-                            borderRadius: '5px',
-                            border: 'none',
-                            background: 'transparent',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#211712'
-                          }}
-                          title="Decrease quantity"
-                        >
-                          <Minus size={12} strokeWidth={2.5} />
-                        </button>
-                        <span style={{
-                          fontWeight: 800,
-                          minWidth: '22px',
-                          textAlign: 'center',
-                          fontSize: '0.88rem',
-                          color: '#211712'
-                        }}>
-                          {item.quantity}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => updateQuantity(item.customKey, item.quantity + 1)}
-                          style={{
-                            width: '24px',
-                            height: '24px',
-                            borderRadius: '5px',
-                            border: 'none',
-                            background: 'transparent',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#211712'
-                          }}
-                          title="Increase quantity"
-                        >
-                          <Plus size={12} strokeWidth={2.5} />
-                        </button>
-                      </div>
+                      {/* Delete Icon Only Button */}
+                      <button
+                        type="button"
+                        onClick={() => removeItem(item.customKey)}
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '8px',
+                          border: '1px solid #FCA5A5',
+                          background: '#FEF2F2',
+                          color: '#DC2626',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.15s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#DC2626';
+                          e.currentTarget.style.color = '#FFFFFF';
+                          e.currentTarget.style.borderColor = '#DC2626';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#FEF2F2';
+                          e.currentTarget.style.color = '#DC2626';
+                          e.currentTarget.style.borderColor = '#FCA5A5';
+                        }}
+                        title="Remove from cart"
+                      >
+                        <Trash2 size={16} strokeWidth={2} />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -451,6 +451,30 @@ export const CartDrawer = () => {
               >
                 <span>Proceed to Checkout</span>
                 <ArrowRight size={18} strokeWidth={2.5} />
+              </button>
+
+              <button
+                onClick={() => setIsCartOpen(false)}
+                style={{
+                  width: '100%',
+                  height: '42px',
+                  borderRadius: '12px',
+                  border: '1.5px solid #E8DDD2',
+                  background: '#FFFFFF',
+                  color: '#5C524B',
+                  fontSize: '0.86rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  marginTop: '10px',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <ArrowLeft size={14} />
+                <span>Add More Items / Back to Menu</span>
               </button>
             </div>
           </div>

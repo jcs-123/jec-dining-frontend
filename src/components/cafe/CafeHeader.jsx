@@ -59,20 +59,22 @@ export const CafeHeader = ({ cafe }) => {
     ? (pathSlug.includes('byte') ? 'jecbytes' : 'jeccafe')
     : (cafe?.slug || currentCafe?.slug || 'jeccafe');
 
+  const isJeccafe = activeSlug === 'jeccafe';
+
   const activeCafe = cafes.find(c => c.slug === activeSlug || (activeSlug.includes('byte') && c.slug.includes('byte'))) || cafe || currentCafe || {
     slug: activeSlug,
-    name: activeSlug === 'jeccafe' ? 'JECCAFE' : 'JEC BYTES',
-    tagline: activeSlug === 'jeccafe' ? 'Artisanal Coffee & Bistro Combos' : 'Fast Bites, Bowls & Modern Sips',
-    openingHours: '07:00 AM - 07:00 PM',
-    address: 'East Quad, Central Plaza, JEC Campus'
+    name: isJeccafe ? 'JECCAFE' : 'JEC BYTES',
+    tagline: isJeccafe ? 'Artisanal Coffee & Bistro Combos' : 'Fast Bites, Bowls & Modern Sips',
+    openingHours: isJeccafe ? '07:00 AM - 07:00 PM' : '08:00 AM - 11:00 PM',
+    address: isJeccafe ? 'East Quad, Central Plaza, JEC Campus' : 'Tech Innovation Hub, Food Street, JEC Campus'
   };
 
-  const otherSlug = activeSlug === 'jeccafe' ? 'jecbytes' : 'jeccafe';
+  const otherSlug = isJeccafe ? 'jecbytes' : 'jeccafe';
   const otherCafe = cafes.find(c => c.slug === otherSlug || (otherSlug.includes('byte') && c.slug.includes('byte'))) || {
     slug: otherSlug,
-    name: otherSlug === 'jeccafe' ? 'JECCAFE' : 'JEC BYTES',
-    tagline: otherSlug === 'jeccafe' ? 'Artisanal Coffee & Bistro Combos' : 'Fast Bites, Bowls & Modern Sips',
-    openingHours: otherSlug === 'jeccafe' ? '07:00 AM - 07:00 PM' : '08:00 AM - 10:00 PM'
+    name: isJeccafe ? 'JEC BYTES' : 'JECCAFE',
+    tagline: isJeccafe ? 'Fast Bites, Bowls & Modern Sips' : 'Artisanal Coffee & Bistro Combos',
+    openingHours: isJeccafe ? '08:00 AM - 11:00 PM' : '07:00 AM - 07:00 PM'
   };
 
   const handleSwitchCafe = (targetSlug) => {
@@ -82,7 +84,6 @@ export const CafeHeader = ({ cafe }) => {
     toast.success(`Switched to ${targetSlug === 'jeccafe' ? 'JECCAFE' : 'JEC BYTES'}`);
   };
 
-  const isJeccafe = activeSlug === 'jeccafe';
   const accentColor = '#D66C3E'; // Warm copper accent
   const pillBg = '#FFFFFF';
   const pillBorder = '#EADBCC';
@@ -92,18 +93,20 @@ export const CafeHeader = ({ cafe }) => {
       <header
         className={`navbar ${isScrolled ? 'navbar-scrolled' : ''}`}
         style={{
-          position: 'sticky',
+          position: 'fixed',
           top: 0,
-          zIndex: 50,
-          height: isScrolled ? '64px' : '72px',
-          background: 'rgba(251, 248, 242, 0.94)',
+          left: 0,
+          right: 0,
+          width: '100%',
+          zIndex: 1000,
+          height: '72px',
+          background: 'rgba(251, 248, 242, 0.98)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           borderBottom: '1.5px solid #EADBCC',
-          boxShadow: isScrolled ? '0 8px 24px rgba(50, 30, 15, 0.08)' : '0 2px 8px rgba(50, 30, 15, 0.02)',
+          boxShadow: isScrolled ? '0 4px 16px rgba(50, 30, 15, 0.06)' : '0 2px 8px rgba(50, 30, 15, 0.03)',
           display: 'flex',
           alignItems: 'center',
-          transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
           boxSizing: 'border-box'
         }}
       >
@@ -115,15 +118,15 @@ export const CafeHeader = ({ cafe }) => {
             height: '100%',
             width: '100%'
           }}>
-            {/* Left: Brand Logo & Desktop Switcher */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            {/* Left: Brand Logo & Dual Café Segmented Switcher */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'nowrap' }}>
               <Link
                 to={`/${activeSlug}`}
                 className="brand-logo"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '10px',
+                  gap: '9px',
                   color: '#1E140E',
                   textDecoration: 'none'
                 }}
@@ -145,17 +148,17 @@ export const CafeHeader = ({ cafe }) => {
                 <div>
                   <span style={{
                     fontFamily: "'Fraunces', Georgia, serif",
-                    fontSize: '1.28rem',
+                    fontSize: '1.25rem',
                     fontWeight: 800,
                     letterSpacing: '-0.02em',
                     color: '#1E140E',
                     lineHeight: 1.1,
                     display: 'block'
                   }}>
-                    {activeCafe?.name || (isJeccafe ? 'JECCAFE' : 'JEC BYTES')}
+                    {isJeccafe ? 'JECCAFE' : 'JEC BYTES'}
                   </span>
-                  <span style={{
-                    fontSize: '0.7rem',
+                  <span className="brand-subtitle" style={{
+                    fontSize: '0.68rem',
                     color: '#7A6E63',
                     fontWeight: 600,
                     letterSpacing: '0.02em',
@@ -166,31 +169,29 @@ export const CafeHeader = ({ cafe }) => {
                 </div>
               </Link>
 
-              {/* Desktop-Only Quick Switch Café Pill */}
-              <div className="header-desktop-nav" style={{ position: 'relative', marginLeft: '6px' }}>
+              {/* Segmented Campus Switcher Toggle (Desktop: both pills, Mobile: only next café) */}
+              <div className="cafe-header-switcher" style={{ marginLeft: '4px' }}>
                 <button
-                  onClick={() => handleSwitchCafe(otherSlug)}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontSize: '0.78rem',
-                    padding: '0.4rem 0.85rem',
-                    borderRadius: '20px',
-                    fontWeight: 700,
-                    border: `1.5px solid ${pillBorder}`,
-                    color: '#1E140E',
-                    background: pillBg,
-                    cursor: 'pointer',
-                    boxShadow: '0 2px 6px rgba(50, 30, 15, 0.04)',
-                    transition: 'all 0.15s ease'
-                  }}
-                  title={`Switch immediately to ${otherCafe.name}`}
+                  type="button"
+                  onClick={() => !isJeccafe && handleSwitchCafe('jeccafe')}
+                  className={`cafe-switch-pill ${isJeccafe ? 'active jeccafe' : ''}`}
+                  title={isJeccafe ? 'Currently viewing JECCAFE' : 'Switch to JECCAFE (Artisanal Coffee & Bistro Combos)'}
                 >
-                  <ArrowLeftRight size={13} color={accentColor} />
-                  <span>Switch to {otherCafe.name}</span>
+                  <Coffee size={13} strokeWidth={2.4} />
+                  <span>JECCAFE</span>
+                  <span className="cafe-switch-pill-action" aria-hidden="true">→</span>
                 </button>
 
+                <button
+                  type="button"
+                  onClick={() => isJeccafe && handleSwitchCafe('jecbytes')}
+                  className={`cafe-switch-pill ${!isJeccafe ? 'active jecbytes' : ''}`}
+                  title={!isJeccafe ? 'Currently viewing JEC BYTES' : 'Switch to JEC BYTES (Fast Bites, Bowls & Modern Sips)'}
+                >
+                  <Zap size={13} strokeWidth={2.4} />
+                  <span>JEC BYTES</span>
+                  <span className="cafe-switch-pill-action" aria-hidden="true">→</span>
+                </button>
               </div>
             </div>
 
@@ -199,7 +200,7 @@ export const CafeHeader = ({ cafe }) => {
               <Link
                 to="/"
                 style={{
-                  color: '#4A423B',
+                  color: location.pathname === '/' ? '#D66C3E' : '#4A423B',
                   fontWeight: 600,
                   fontSize: '0.86rem',
                   padding: '6px 12px',
@@ -211,10 +212,37 @@ export const CafeHeader = ({ cafe }) => {
                 All Cafés
               </Link>
 
+              <button
+                type="button"
+                onClick={() => {
+                  const targetCafe = activeSlug || 'jeccafe';
+                  if (location.pathname === `/${targetCafe}`) {
+                    const el = document.getElementById('combos-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    else window.scrollTo({ top: 380, behavior: 'smooth' });
+                  } else {
+                    navigate(`/${targetCafe}`);
+                  }
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: (location.pathname.includes('jeccafe') || location.pathname.includes('byte')) ? '#D66C3E' : '#4A423B',
+                  fontWeight: 600,
+                  fontSize: '0.86rem',
+                  padding: '6px 12px',
+                  borderRadius: '20px',
+                  cursor: 'pointer',
+                  transition: 'color 0.15s'
+                }}
+              >
+                Browse Combos
+              </button>
+
               <Link
                 to="/my-orders"
                 style={{
-                  color: '#4A423B',
+                  color: location.pathname === '/my-orders' ? '#D66C3E' : '#4A423B',
                   fontWeight: 600,
                   fontSize: '0.86rem',
                   padding: '6px 12px',
@@ -442,6 +470,17 @@ export const CafeHeader = ({ cafe }) => {
         </div>
       </header>
 
+      {/* Fixed Header Spacer */}
+      <div
+        aria-hidden="true"
+        style={{
+          height: isScrolled ? '64px' : '72px',
+          width: '100%',
+          flexShrink: 0,
+          transition: 'height 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+        }}
+      />
+
       {/* ============================================================
           MOBILE SLIDE-OUT NAVIGATION DRAWER (Inside Toggler)
           Ultra-Premium, Responsive Editorial Layout
@@ -627,46 +666,99 @@ export const CafeHeader = ({ cafe }) => {
                   <span>Switch Campus Location</span>
                 </div>
 
-                <button
-                  onClick={() => handleSwitchCafe(otherSlug)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '10px 12px',
-                    borderRadius: '12px',
-                    border: 'none',
-                    background: '#1A1816',
-                    color: '#FFFFFF',
-                    cursor: 'pointer',
-                    boxShadow: '0 3px 10px rgba(26, 24, 22, 0.22)',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-                    <div style={{
-                      width: '28px',
-                      height: '28px',
-                      borderRadius: '8px',
-                      background: 'rgba(255,255,255,0.18)',
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {/* JECCAFE Button */}
+                  <button
+                    onClick={() => {
+                      if (!isJeccafe) handleSwitchCafe('jeccafe');
+                      else setIsMenuOpen(false);
+                    }}
+                    style={{
+                      width: '100%',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
-                      {otherSlug === 'jeccafe' ? <Coffee size={15} /> : <Zap size={15} />}
-                    </div>
-                    <div style={{ textAlign: 'left' }}>
-                      <div style={{ fontSize: '0.88rem', fontWeight: 800, lineHeight: 1.1 }}>
-                        Switch to {otherCafe.name}
+                      justifyContent: 'space-between',
+                      padding: '10px 12px',
+                      borderRadius: '12px',
+                      border: isJeccafe ? '1.5px solid #844825' : '1px solid #EADBCC',
+                      background: isJeccafe ? 'linear-gradient(135deg, #361D11 0%, #6E3B1E 100%)' : '#FFFFFF',
+                      color: isJeccafe ? '#FFFFFF' : '#1E140E',
+                      cursor: 'pointer',
+                      boxShadow: isJeccafe ? '0 3px 10px rgba(54, 29, 17, 0.25)' : 'none',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                      <div style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '8px',
+                        background: isJeccafe ? 'rgba(255,255,255,0.2)' : '#FAF5EE',
+                        color: isJeccafe ? '#FFFFFF' : '#C25E30',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <Coffee size={15} />
                       </div>
-                      <div style={{ fontSize: '0.7rem', opacity: 0.8, marginTop: '2px' }}>
-                        {otherCafe.openingHours || 'Open for ordering'}
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 800, lineHeight: 1.1 }}>
+                          JECCAFE {isJeccafe && '✓ Active'}
+                        </div>
+                        <div style={{ fontSize: '0.7rem', opacity: isJeccafe ? 0.85 : 0.65, marginTop: '2px' }}>
+                          Artisanal Coffee & Bistro Combos
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <span style={{ fontSize: '1.05rem', fontWeight: 800 }}>→</span>
-                </button>
+                    {!isJeccafe && <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#C25E30' }}>Switch →</span>}
+                  </button>
+
+                  {/* JEC BYTES Button */}
+                  <button
+                    onClick={() => {
+                      if (isJeccafe) handleSwitchCafe('jecbytes');
+                      else setIsMenuOpen(false);
+                    }}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '10px 12px',
+                      borderRadius: '12px',
+                      border: !isJeccafe ? '1.5px solid #157E82' : '1px solid #EADBCC',
+                      background: !isJeccafe ? 'linear-gradient(135deg, #0A3D40 0%, #157E82 100%)' : '#FFFFFF',
+                      color: !isJeccafe ? '#FFFFFF' : '#1E140E',
+                      cursor: 'pointer',
+                      boxShadow: !isJeccafe ? '0 3px 10px rgba(10, 61, 64, 0.25)' : 'none',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                      <div style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '8px',
+                        background: !isJeccafe ? 'rgba(255,255,255,0.2)' : '#EFF6FF',
+                        color: !isJeccafe ? '#FFFFFF' : '#0A3D40',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <Zap size={15} />
+                      </div>
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 800, lineHeight: 1.1 }}>
+                          JEC BYTES {!isJeccafe && '✓ Active'}
+                        </div>
+                        <div style={{ fontSize: '0.7rem', opacity: !isJeccafe ? 0.85 : 0.65, marginTop: '2px' }}>
+                          Fast Bites, Bowls & Modern Sips
+                        </div>
+                      </div>
+                    </div>
+                    {isJeccafe && <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0A3D40' }}>Switch →</span>}
+                  </button>
+                </div>
 
                 <button
                   onClick={() => {
@@ -700,8 +792,14 @@ export const CafeHeader = ({ cafe }) => {
                 <button
                   onClick={() => {
                     setIsMenuOpen(false);
-                    const el = document.getElementById('combos-section');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    const targetCafe = activeSlug || 'jeccafe';
+                    if (location.pathname === `/${targetCafe}`) {
+                      const el = document.getElementById('combos-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                      else window.scrollTo({ top: 380, behavior: 'smooth' });
+                    } else {
+                      navigate(`/${targetCafe}`);
+                    }
                   }}
                   style={{
                     width: '100%',

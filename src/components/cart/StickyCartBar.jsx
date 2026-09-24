@@ -1,12 +1,21 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { formatINR } from '../../utils/formatters';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
 
 export const StickyCartBar = () => {
   const { items, itemCount, totalPaise, setIsCartOpen } = useCart();
+  const location = useLocation();
 
   if (items.length === 0) return null;
+  if (
+    location.pathname === '/checkout' ||
+    location.pathname.startsWith('/order-success') ||
+    location.pathname.startsWith('/order/')
+  ) {
+    return null;
+  }
 
   return (
     <div style={{

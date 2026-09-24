@@ -44,7 +44,7 @@ export const PaymentPage = () => {
     return <div className="app-container" style={{ padding: '4rem 0', textAlign: 'center' }}>Loading payment portal...</div>;
   }
 
-  const { order, payment, reservationId, cafe } = paymentData;
+  const { order, payment, cafe } = paymentData;
   const isJeccafe = cafe?.slug === 'jeccafe';
 
   const handleSimulatePayment = async (action) => {
@@ -58,8 +58,7 @@ export const PaymentPage = () => {
 
       const res = await api.post('/payments/simulate-mock', {
         paymentAttemptId: payment.paymentAttemptId,
-        action, // 'success' | 'fail'
-        reservationId
+        action // 'success' | 'fail'
       });
 
       if (action === 'success' && res.success) {

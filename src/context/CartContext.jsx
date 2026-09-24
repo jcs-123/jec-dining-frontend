@@ -36,12 +36,12 @@ export const CartProvider = ({ children }) => {
     }
   }, [items, cartCafe]);
 
-  // Generate unique item key based on combo ID, option selections, and scheduled pickup date
-  const generateCustomKey = (comboId, selectedOptions = [], scheduledDate = 'Today') => {
+  // Generate unique item key based on combo name, option selections, and scheduled pickup date
+  const generateCustomKey = (comboIdentifier, selectedOptions = [], scheduledDate = 'Today') => {
     const sortedOptions = [...selectedOptions].sort((a, b) => a.optionName.localeCompare(b.optionName));
     const optStr = sortedOptions.map(o => `${o.groupName}:${o.optionName}`).join('|');
     const dateStr = (scheduledDate || 'Today').trim();
-    return `${comboId}__${dateStr}__${optStr}`;
+    return `${comboIdentifier}__${dateStr}__${optStr}`;
   };
 
   const addItem = (cafe, combo, quantity = 1, selectedOptions = [], scheduledDate = 'Today') => {
@@ -75,13 +75,18 @@ export const CartProvider = ({ children }) => {
 
   const performAdd = (cafe, combo, quantity, selectedOptions, scheduledDate = 'Today') => {
     const dateLabel = scheduledDate || 'Today';
-    const customKey = generateCustomKey(combo._id || combo.id, selectedOptions, dateLabel);
+    // Match by combo name rather than raw ID
+    const comboIdentifier = combo.name || combo._id || combo.id;
+    const customKey = generateCustomKey(comboIdentifier, selectedOptions, dateLabel);
     const effectiveBase = combo.basePricePaise;
     const extrasPaise = selectedOptions.reduce((sum, opt) => sum + (opt.extraPricePaise || 0), 0);
     const unitPricePaise = effectiveBase + extrasPaise;
 
     setItems((prev) => {
-      const existingIdx = prev.findIndex((i) => i.customKey === customKey);
+      const existingIdx = prev.findIndex((i) =>
+        i.customKey === customKey ||
+        (i.name === combo.name && i.scheduledDate === dateLabel && JSON.stringify(i.selectedOptions || []) === JSON.stringify(selectedOptions || []))
+      );
       if (existingIdx > -1) {
         const updated = [...prev];
         updated[existingIdx].quantity += quantity;

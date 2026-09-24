@@ -193,13 +193,9 @@ export const SuperAdminOrdersPage = () => {
               cursor: 'pointer'
             }}
           >
-            <option value="all">All Order Statuses</option>
-            <option value="Pending">Pending</option>
-            <option value="Accepted">Accepted</option>
-            <option value="Preparing">Preparing</option>
-            <option value="Ready for Pickup">Ready for Pickup</option>
+            <option value="all">All Orders</option>
             <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled</option>
+            <option value="Accepted">Accepted</option>
           </select>
 
           {/* Payment Status */}
@@ -247,8 +243,8 @@ export const SuperAdminOrdersPage = () => {
             No orders match the selected filters.
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
+          <div className="super-table-container">
+            <table className="super-table">
               <thead>
                 <tr style={{ borderBottom: '1px solid #1E293B', textAlign: 'left', color: '#64748B', background: '#090E17' }}>
                   <th style={{ padding: '12px 16px', fontWeight: 700, fontSize: '0.72rem', textTransform: 'uppercase' }}>Order Number</th>

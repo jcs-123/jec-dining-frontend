@@ -49,19 +49,26 @@ export const ComboCard = ({ combo, onQuickAdd, defaultDate = 'Today' }) => {
         opacity: combo.isSoldOut ? 0.95 : 1
       }}
     >
-      {/* 1. Product Image (16 / 9 aspect ratio) */}
-      <div style={{
-        position: 'relative',
-        width: '100%',
-        aspectRatio: '16 / 9',
-        overflow: 'hidden',
-        background: '#EFE8DF'
-      }}>
+      {/* 1. Product Image (Responsive 4:3 Aspect Ratio with centered object-fit) */}
+      <div
+        className="combo-card-image-wrap"
+        style={{
+          position: 'relative',
+          width: '100%',
+          aspectRatio: '4 / 3',
+          overflow: 'hidden',
+          background: '#FAF6F1'
+        }}
+      >
         <img
-          src={combo.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80'}
+          src={combo.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80'}
           alt={combo.name}
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          className="combo-card-image"
+          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
           loading="lazy"
+          onError={(e) => {
+            e.target.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80';
+          }}
         />
 
         {/* 2. VEG or NON-VEG badge */}

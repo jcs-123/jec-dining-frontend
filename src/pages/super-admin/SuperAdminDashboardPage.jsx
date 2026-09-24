@@ -14,7 +14,9 @@ import {
   ExternalLink,
   ChevronRight,
   RefreshCw,
-  Store
+  Store,
+  CheckCheck,
+  ChefHat
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
@@ -47,48 +49,43 @@ export const SuperAdminDashboardPage = () => {
   const recentOrders = data?.recentOrders || [];
 
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
       {/* Page Title & Top Bar */}
       <div style={{
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'space-between',
         marginBottom: '2rem',
         flexWrap: 'wrap',
         gap: '1rem'
       }}>
         <div>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: 'rgba(16, 185, 129, 0.1)',
-            border: '1px solid rgba(16, 185, 129, 0.3)',
-            padding: '4px 10px',
-            borderRadius: '16px',
-            fontSize: '0.72rem',
-            fontWeight: 700,
-            color: '#34D399',
-            marginBottom: '8px'
-          }}>
-            <Sparkles size={13} />
+          <div className="super-badge-emerald" style={{ marginBottom: '8px' }}>
+            <Sparkles size={12} />
             CONSOLIDATED CAMPUS OVERVIEW
           </div>
-          <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#F8FAFC', margin: 0, letterSpacing: '-0.02em' }}>
+          <h1 style={{
+            fontSize: '1.85rem',
+            fontWeight: 800,
+            color: '#F8FAFC',
+            margin: 0,
+            letterSpacing: '-0.02em',
+            lineHeight: 1.2
+          }}>
             Executive Super Admin Dashboard
           </h1>
-          <p style={{ color: '#94A3B8', fontSize: '0.88rem', margin: '4px 0 0' }}>
-            Real-time multi-venue performance monitoring across JECCAFE and JEC BYTES
+          <p style={{ color: '#94A3B8', fontSize: '0.88rem', margin: '6px 0 0', lineHeight: 1.4 }}>
+            Real-time multi-venue performance monitoring and accurate order counts across JECCAFE and JEC BYTES
           </p>
         </div>
 
         {/* Action buttons */}
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div className="super-header-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
           <button
             onClick={fetchOverview}
             disabled={loading}
             style={{
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
               padding: '9px 14px',
@@ -103,12 +100,12 @@ export const SuperAdminDashboardPage = () => {
             }}
           >
             <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
-            Refresh
+            <span>Refresh</span>
           </button>
           <Link
             to="/super-admin/users"
             style={{
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
               padding: '9px 16px',
@@ -119,41 +116,30 @@ export const SuperAdminDashboardPage = () => {
               fontSize: '0.82rem',
               fontWeight: 700,
               textDecoration: 'none',
-              boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)'
+              boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)',
+              transition: 'all 0.15s ease'
             }}
           >
             <Users size={16} />
-            Add / Manage Users
+            <span>Manage Users</span>
           </Link>
         </div>
       </div>
 
-      {/* 1. Platform-Wide Key Performance Metrics (KPI Cards) */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-        gap: '1.25rem',
-        marginBottom: '2.5rem'
-      }}>
-        {/* Total Revenue */}
-        <div style={{
-          background: 'linear-gradient(145deg, #131E33 0%, #0D1625 100%)',
-          border: '1px solid #1E2E4A',
-          borderRadius: '18px',
-          padding: '1.5rem',
-          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.25)',
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Total Campus Revenue
+      {/* Accurate Platform-Wide Key Performance Metrics (KPI Cards) */}
+      <div className="super-kpi-grid">
+        {/* Completed Order Amount (Revenue) */}
+        <div className="super-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+            <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Completed Orders Amount
             </span>
             <div style={{
-              width: '40px',
-              height: '40px',
+              width: '38px',
+              height: '38px',
               borderRadius: '10px',
               background: 'rgba(16, 185, 129, 0.15)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -162,123 +148,120 @@ export const SuperAdminDashboardPage = () => {
               <DollarSign size={20} />
             </div>
           </div>
-          <div style={{ fontSize: '1.9rem', fontWeight: 800, color: '#F8FAFC', letterSpacing: '-0.02em', marginBottom: '4px' }}>
-            ₹{((stats.totalRevenuePaise || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          <div style={{ fontSize: '1.9rem', fontWeight: 800, color: '#34D399', letterSpacing: '-0.02em', marginBottom: '4px' }}>
+            ₹{((stats.completedRevenuePaise ?? stats.totalRevenuePaise ?? 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </div>
-          <div style={{ fontSize: '0.76rem', color: '#64748B' }}>
-            Today: <span style={{ color: '#34D399', fontWeight: 700 }}>₹{((stats.todayRevenuePaise || 0) / 100).toFixed(2)}</span>
+          <div style={{ fontSize: '0.74rem', color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>Today Completed:</span>
+            <span style={{ color: '#34D399', fontWeight: 700 }}>
+              ₹{((stats.todayCompletedRevenuePaise ?? stats.todayRevenuePaise ?? 0) / 100).toFixed(2)}
+            </span>
           </div>
         </div>
 
-        {/* Total Orders */}
-        <div style={{
-          background: 'linear-gradient(145deg, #131E33 0%, #0D1625 100%)',
-          border: '1px solid #1E2E4A',
-          borderRadius: '18px',
-          padding: '1.5rem',
-          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.25)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Total Orders Placed
+        {/* Completed Order Count */}
+        <div className="super-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+            <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Completed Orders Count
             </span>
             <div style={{
-              width: '40px',
-              height: '40px',
+              width: '38px',
+              height: '38px',
+              borderRadius: '10px',
+              background: 'rgba(52, 211, 153, 0.15)',
+              border: '1px solid rgba(52, 211, 153, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#34D399'
+            }}>
+              <CheckCheck size={20} />
+            </div>
+          </div>
+          <div style={{ fontSize: '1.9rem', fontWeight: 800, color: '#F8FAFC', letterSpacing: '-0.02em', marginBottom: '4px' }}>
+            {stats.completedOrders ?? 0}
+          </div>
+          <div style={{ fontSize: '0.74rem', color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>Today Completed:</span>
+            <span style={{ color: '#34D399', fontWeight: 700 }}>
+              {stats.todayCompletedOrders ?? 0} orders
+            </span>
+          </div>
+        </div>
+
+        {/* Accepted Orders Count */}
+        <div className="super-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+            <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Accepted Orders Count
+            </span>
+            <div style={{
+              width: '38px',
+              height: '38px',
               borderRadius: '10px',
               background: 'rgba(59, 130, 246, 0.15)',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: '#60A5FA'
             }}>
-              <ShoppingBag size={20} />
+              <ChefHat size={20} />
             </div>
           </div>
-          <div style={{ fontSize: '1.9rem', fontWeight: 800, color: '#F8FAFC', letterSpacing: '-0.02em', marginBottom: '4px' }}>
-            {stats.totalOrders || 0}
+          <div style={{ fontSize: '1.9rem', fontWeight: 800, color: '#60A5FA', letterSpacing: '-0.02em', marginBottom: '4px' }}>
+            {stats.acceptedOrders ?? 0}
           </div>
-          <div style={{ fontSize: '0.76rem', color: '#64748B' }}>
-            Today: <span style={{ color: '#60A5FA', fontWeight: 700 }}>{stats.todayOrders || 0} orders</span>
+          <div style={{ fontSize: '0.74rem', color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>Today Accepted:</span>
+            <span style={{ color: '#60A5FA', fontWeight: 700 }}>
+              {stats.todayAcceptedOrders ?? 0} orders
+            </span>
           </div>
         </div>
 
-        {/* Registered Customers */}
-        <div style={{
-          background: 'linear-gradient(145deg, #131E33 0%, #0D1625 100%)',
-          border: '1px solid #1E2E4A',
-          borderRadius: '18px',
-          padding: '1.5rem',
-          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.25)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Registered Students / Staff
+        {/* Total Orders Placed */}
+        <div className="super-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+            <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Total Orders Placed
             </span>
             <div style={{
-              width: '40px',
-              height: '40px',
+              width: '38px',
+              height: '38px',
               borderRadius: '10px',
-              background: 'rgba(168, 85, 247, 0.15)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#C084FC'
-            }}>
-              <Users size={20} />
-            </div>
-          </div>
-          <div style={{ fontSize: '1.9rem', fontWeight: 800, color: '#F8FAFC', letterSpacing: '-0.02em', marginBottom: '4px' }}>
-            {stats.totalCustomers || 0}
-          </div>
-          <div style={{ fontSize: '0.76rem', color: '#64748B' }}>
-            Active Campus Customers
-          </div>
-        </div>
-
-        {/* Managed Venues */}
-        <div style={{
-          background: 'linear-gradient(145deg, #131E33 0%, #0D1625 100%)',
-          border: '1px solid #1E2E4A',
-          borderRadius: '18px',
-          padding: '1.5rem',
-          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.25)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Campus Venues
-            </span>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '10px',
-              background: 'rgba(245, 158, 11, 0.15)',
+              background: 'rgba(251, 191, 36, 0.15)',
+              border: '1px solid rgba(251, 191, 36, 0.3)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: '#FBBF24'
             }}>
-              <Store size={20} />
+              <ShoppingBag size={20} />
             </div>
           </div>
           <div style={{ fontSize: '1.9rem', fontWeight: 800, color: '#F8FAFC', letterSpacing: '-0.02em', marginBottom: '4px' }}>
-            {cafes.length} Cafés Active
+            {stats.totalOrders ?? 0}
           </div>
-          <div style={{ fontSize: '0.76rem', color: '#34D399', fontWeight: 600 }}>
-            ● JECCAFE & JEC BYTES Online
+          <div style={{ fontSize: '0.74rem', color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>All Statuses Combined:</span>
+            <span style={{ color: '#FBBF24', fontWeight: 700 }}>
+              Today: {stats.todayOrders ?? 0}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* 2. Side-By-Side 2-Café Comparative Breakdown */}
+      {/* Side-By-Side 2-Café Comparative Breakdown */}
       <div style={{ marginBottom: '2.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '8px' }}>
           <div>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#F8FAFC', margin: 0 }}>
-              2-Café Operational Breakdown
+              2-Café Accurate Breakdown
             </h2>
             <p style={{ fontSize: '0.8rem', color: '#94A3B8', margin: '3px 0 0' }}>
-              Side-by-side performance indicators between both campus cafés
+              Side-by-side performance indicators between JECCAFE and JEC BYTES
             </p>
           </div>
           <Link
@@ -288,37 +271,42 @@ export const SuperAdminDashboardPage = () => {
               fontWeight: 700,
               color: '#10B981',
               textDecoration: 'none',
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
               gap: '4px'
             }}
           >
-            View In-Depth 2-Café Reports <ArrowUpRight size={15} />
+            <span>View In-Depth 2-Café Reports</span>
+            <ArrowUpRight size={15} />
           </Link>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '1.5rem' }}>
+        <div className="super-comparative-grid">
           {cafes.map((cafe) => {
             const isJeccafe = cafe.slug === 'jeccafe';
-            const themeColor = isJeccafe ? '#EA580C' : '#0284C7';
             const themeBg = isJeccafe ? 'rgba(234, 88, 12, 0.08)' : 'rgba(2, 132, 199, 0.08)';
-            const themeBorder = isJeccafe ? 'rgba(234, 88, 12, 0.25)' : 'rgba(2, 132, 199, 0.25)';
+            const themeBorder = isJeccafe ? 'rgba(234, 88, 12, 0.28)' : 'rgba(2, 132, 199, 0.28)';
             const badgeColor = isJeccafe ? '#FB923C' : '#38BDF8';
 
             return (
               <div
                 key={cafe.id}
+                className="super-card"
                 style={{
-                  background: 'linear-gradient(170deg, #111B2C 0%, #0D1524 100%)',
                   border: `1.5px solid ${themeBorder}`,
-                  borderRadius: '20px',
-                  padding: '1.75rem',
                   boxShadow: '0 12px 30px rgba(0, 0, 0, 0.35)',
                   position: 'relative'
                 }}
               >
                 {/* Café Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  marginBottom: '1.5rem',
+                  flexWrap: 'wrap',
+                  gap: '8px'
+                }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{
                       width: '46px',
@@ -338,21 +326,12 @@ export const SuperAdminDashboardPage = () => {
                         <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#F8FAFC', margin: 0 }}>
                           {cafe.name}
                         </h3>
-                        <span style={{
-                          fontSize: '0.66rem',
-                          fontWeight: 800,
-                          padding: '2px 8px',
-                          borderRadius: '12px',
-                          background: themeBg,
-                          color: badgeColor,
-                          border: `1px solid ${themeBorder}`,
-                          textTransform: 'uppercase'
-                        }}>
-                          {cafe.slug}
+                        <span className={isJeccafe ? 'super-badge-orange' : 'super-badge-cyan'}>
+                          {cafe.slug.toUpperCase()}
                         </span>
                       </div>
-                      <div style={{ fontSize: '0.76rem', color: '#94A3B8', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span>Campus Food Counter •</span>
+                      <div style={{ fontSize: '0.76rem', color: '#94A3B8', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>Campus Venue •</span>
                         <span style={{
                           display: 'inline-flex',
                           alignItems: 'center',
@@ -379,7 +358,7 @@ export const SuperAdminDashboardPage = () => {
                       fontWeight: 700,
                       color: badgeColor,
                       textDecoration: 'none',
-                      display: 'flex',
+                      display: 'inline-flex',
                       alignItems: 'center',
                       gap: '4px',
                       background: themeBg,
@@ -388,37 +367,24 @@ export const SuperAdminDashboardPage = () => {
                       border: `1px solid ${themeBorder}`
                     }}
                   >
-                    View Orders <ChevronRight size={13} />
+                    <span>View Orders</span>
+                    <ChevronRight size={13} />
                   </Link>
                 </div>
 
-                {/* Café 4-Box Stats Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '1.25rem' }}>
+                {/* Café Accurate Stats Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', marginBottom: '1.25rem' }}>
                   <div style={{
                     background: '#0B111D',
                     borderRadius: '12px',
                     padding: '12px 14px',
                     border: '1px solid #1E293B'
                   }}>
-                    <div style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>
-                      All-Time Revenue
-                    </div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#F8FAFC', marginTop: '4px' }}>
-                      ₹{((cafe.totalRevenuePaise || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                    </div>
-                  </div>
-
-                  <div style={{
-                    background: '#0B111D',
-                    borderRadius: '12px',
-                    padding: '12px 14px',
-                    border: '1px solid #1E293B'
-                  }}>
-                    <div style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>
-                      Today's Revenue
+                    <div style={{ fontSize: '0.68rem', color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase' }}>
+                      Completed Revenue
                     </div>
                     <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#34D399', marginTop: '4px' }}>
-                      ₹{((cafe.todayRevenuePaise || 0) / 100).toFixed(2)}
+                      ₹{((cafe.completedRevenuePaise ?? cafe.totalRevenuePaise ?? 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </div>
                   </div>
 
@@ -428,11 +394,11 @@ export const SuperAdminDashboardPage = () => {
                     padding: '12px 14px',
                     border: '1px solid #1E293B'
                   }}>
-                    <div style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>
-                      Total Orders
+                    <div style={{ fontSize: '0.68rem', color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase' }}>
+                      Completed Orders
                     </div>
                     <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#F8FAFC', marginTop: '4px' }}>
-                      {cafe.totalOrders || 0}
+                      {cafe.completedOrders ?? 0}
                     </div>
                   </div>
 
@@ -442,11 +408,25 @@ export const SuperAdminDashboardPage = () => {
                     padding: '12px 14px',
                     border: '1px solid #1E293B'
                   }}>
-                    <div style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>
-                      Pending Fulfillment
+                    <div style={{ fontSize: '0.68rem', color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase' }}>
+                      Accepted Orders
                     </div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: cafe.pendingOrders > 0 ? '#F59E0B' : '#94A3B8', marginTop: '4px' }}>
-                      {cafe.pendingOrders || 0}
+                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#60A5FA', marginTop: '4px' }}>
+                      {cafe.acceptedOrders ?? 0}
+                    </div>
+                  </div>
+
+                  <div style={{
+                    background: '#0B111D',
+                    borderRadius: '12px',
+                    padding: '12px 14px',
+                    border: '1px solid #1E293B'
+                  }}>
+                    <div style={{ fontSize: '0.68rem', color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase' }}>
+                      Total Placed
+                    </div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#CBD5E1', marginTop: '4px' }}>
+                      {cafe.totalOrders || 0}
                     </div>
                   </div>
                 </div>
@@ -468,136 +448,14 @@ export const SuperAdminDashboardPage = () => {
                     rel="noreferrer"
                     style={{ color: badgeColor, textDecoration: 'none', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                   >
-                    Open /{cafe.slug}/admin <ExternalLink size={12} />
+                    <span>Open /{cafe.slug}/admin</span>
+                    <ExternalLink size={12} />
                   </a>
                 </div>
               </div>
             );
           })}
         </div>
-      </div>
-
-      {/* 3. Combined Recent Orders Stream (Cross-Café) */}
-      <div style={{
-        background: 'linear-gradient(175deg, #111B2C 0%, #0D1524 100%)',
-        border: '1px solid #1E2E4A',
-        borderRadius: '20px',
-        padding: '1.75rem',
-        boxShadow: '0 12px 30px rgba(0, 0, 0, 0.35)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-          <div>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#F8FAFC', margin: 0 }}>
-              Recent Orders Across Both Cafés
-            </h2>
-            <p style={{ fontSize: '0.8rem', color: '#94A3B8', margin: '3px 0 0' }}>
-              Real-time campus order flow across JECCAFE and JEC BYTES
-            </p>
-          </div>
-          <Link
-            to="/super-admin/orders"
-            style={{
-              fontSize: '0.82rem',
-              fontWeight: 700,
-              color: '#10B981',
-              textDecoration: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}
-          >
-            View All Orders Table <ChevronRight size={15} />
-          </Link>
-        </div>
-
-        {recentOrders.length === 0 ? (
-          <div style={{ padding: '3rem', textAlign: 'center', color: '#64748B' }}>
-            No recent orders placed yet on the campus platform.
-          </div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid #1E293B', textAlign: 'left', color: '#64748B' }}>
-                  <th style={{ padding: '10px 14px', fontWeight: 700, fontSize: '0.72rem', textTransform: 'uppercase' }}>Order #</th>
-                  <th style={{ padding: '10px 14px', fontWeight: 700, fontSize: '0.72rem', textTransform: 'uppercase' }}>Café</th>
-                  <th style={{ padding: '10px 14px', fontWeight: 700, fontSize: '0.72rem', textTransform: 'uppercase' }}>Customer</th>
-                  <th style={{ padding: '10px 14px', fontWeight: 700, fontSize: '0.72rem', textTransform: 'uppercase' }}>Items</th>
-                  <th style={{ padding: '10px 14px', fontWeight: 700, fontSize: '0.72rem', textTransform: 'uppercase' }}>Amount</th>
-                  <th style={{ padding: '10px 14px', fontWeight: 700, fontSize: '0.72rem', textTransform: 'uppercase' }}>Status</th>
-                  <th style={{ padding: '10px 14px', fontWeight: 700, fontSize: '0.72rem', textTransform: 'uppercase' }}>Payment</th>
-                  <th style={{ padding: '10px 14px', fontWeight: 700, fontSize: '0.72rem', textTransform: 'uppercase' }}>Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentOrders.map((order) => {
-                  const isJeccafe = order.cafeId?.slug === 'jeccafe';
-                  const cafeBadgeBg = isJeccafe ? 'rgba(234, 88, 12, 0.15)' : 'rgba(2, 132, 199, 0.15)';
-                  const cafeBadgeColor = isJeccafe ? '#FB923C' : '#38BDF8';
-                  const cafeBorder = isJeccafe ? 'rgba(234, 88, 12, 0.3)' : 'rgba(2, 132, 199, 0.3)';
-
-                  return (
-                    <tr key={order._id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                      <td style={{ padding: '14px', fontWeight: 700, color: '#F8FAFC' }}>
-                        {order.orderNumber}
-                      </td>
-                      <td style={{ padding: '14px' }}>
-                        <span style={{
-                          padding: '4px 10px',
-                          borderRadius: '12px',
-                          background: cafeBadgeBg,
-                          border: `1px solid ${cafeBorder}`,
-                          color: cafeBadgeColor,
-                          fontWeight: 700,
-                          fontSize: '0.74rem'
-                        }}>
-                          {order.cafeId?.name || 'Café'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '14px', color: '#CBD5E1' }}>
-                        <div style={{ fontWeight: 600 }}>{order.customerSnapshot?.name || 'Customer'}</div>
-                        <div style={{ fontSize: '0.72rem', color: '#64748B' }}>{order.customerSnapshot?.phone}</div>
-                      </td>
-                      <td style={{ padding: '14px', color: '#94A3B8' }}>
-                        {order.items?.map(i => `${i.name} (x${i.quantity})`).join(', ') || 'Items'}
-                      </td>
-                      <td style={{ padding: '14px', fontWeight: 700, color: '#F8FAFC' }}>
-                        ₹{((order.totalPaise || 0) / 100).toFixed(2)}
-                      </td>
-                      <td style={{ padding: '14px' }}>
-                        <span style={{
-                          padding: '3px 8px',
-                          borderRadius: '6px',
-                          fontSize: '0.72rem',
-                          fontWeight: 700,
-                          background: order.orderStatus === 'Completed' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                          color: order.orderStatus === 'Completed' ? '#34D399' : '#FBBF24'
-                        }}>
-                          {order.orderStatus}
-                        </span>
-                      </td>
-                      <td style={{ padding: '14px' }}>
-                        <span style={{
-                          padding: '3px 8px',
-                          borderRadius: '6px',
-                          fontSize: '0.72rem',
-                          fontWeight: 700,
-                          background: order.paymentStatus === 'Paid' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                          color: order.paymentStatus === 'Paid' ? '#34D399' : '#F87171'
-                        }}>
-                          {order.paymentStatus}
-                        </span>
-                      </td>
-                      <td style={{ padding: '14px', color: '#64748B', fontSize: '0.75rem' }}>
-                        {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
     </div>
   );

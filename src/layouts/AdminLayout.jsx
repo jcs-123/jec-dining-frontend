@@ -47,18 +47,8 @@ export const AdminLayout = () => {
     setIsMobileDrawerOpen(false);
   }, [location.pathname]);
 
-  if (loading) {
-    return (
-      <div style={{
-        height: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#FAF6EE'
-      }}>
-        <div style={{ fontWeight: 600, color: '#7A6E63' }}>Verifying Administrator Credentials...</div>
-      </div>
-    );
+  if (loading && !user) {
+    return null;
   }
 
   if (!user || !isAdmin) return null;

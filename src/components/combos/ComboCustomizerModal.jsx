@@ -134,8 +134,23 @@ export const ComboCustomizerModal = ({ isOpen, onClose, combo, cafe, onAddToCart
       <div>
         {/* Banner Image */}
         {combo.image && (
-          <div style={{ borderRadius: '12px', overflow: 'hidden', height: '180px', marginBottom: '1.25rem' }}>
-            <img src={combo.image} alt={combo.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <div style={{
+            borderRadius: '14px',
+            overflow: 'hidden',
+            width: '100%',
+            aspectRatio: '16 / 10',
+            maxHeight: '220px',
+            background: '#FAF6F1',
+            marginBottom: '1.25rem'
+          }}>
+            <img
+              src={combo.image}
+              alt={combo.name}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
+              onError={(e) => {
+                e.target.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80';
+              }}
+            />
           </div>
         )}
 

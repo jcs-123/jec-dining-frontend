@@ -1,0 +1,393 @@
+/* ==========================================================================
+   JEC DINING - MASTER SUPER ADMIN EXECUTIVE DESIGN SYSTEM & RESPONSIVE CSS
+   ========================================================================== */
+
+/* Layout Container */
+.super-admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #070B14;
+  color: #F1F5F9;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  position: relative;
+  width: 100%;
+}
+
+/* Mobile Header Bar */
+.super-admin-mobile-header {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.25rem;
+  background: #0C1322;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 120;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.super-admin-mobile-menu-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #F8FAFC;
+  padding: 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.super-admin-mobile-menu-btn:hover {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #34D399;
+}
+
+/* Mobile Drawer Backdrop */
+.super-admin-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 7, 18, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 140;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.super-admin-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Executive Sidebar - Pinned & Truly Fixed on Desktop */
+.super-admin-sidebar {
+  width: 275px;
+  min-width: 275px;
+  background: linear-gradient(180deg, #0C1322 0%, #070C16 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.5);
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  height: 100vh;
+  z-index: 150;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
+}
+
+/* Main Content Viewport */
+.super-admin-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin-left: 275px;
+  width: calc(100% - 275px);
+  min-height: 100vh;
+  overflow-y: auto;
+  padding: 2.25rem 2.5rem;
+  background: radial-gradient(circle at 50% 0%, #0F172A 0%, #070B14 70%);
+}
+
+.super-admin-content-wrap {
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Typography & Badges */
+.super-badge-emerald {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #34D399;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.super-badge-orange {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(234, 88, 12, 0.12);
+  border: 1px solid rgba(234, 88, 12, 0.28);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #FB923C;
+  letter-spacing: 0.06em;
+}
+
+.super-badge-cyan {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(14, 165, 233, 0.12);
+  border: 1px solid rgba(14, 165, 233, 0.28);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #38BDF8;
+  letter-spacing: 0.06em;
+}
+
+/* Luxury Glass Cards */
+.super-card {
+  background: linear-gradient(165deg, #101A2C 0%, #0B1220 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.super-card:hover {
+  border-color: rgba(16, 185, 129, 0.25);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+}
+
+/* KPI Metrics Grid */
+.super-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+/* Side-by-Side 2-Café Comparative Deep Dive */
+.super-comparative-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.25rem;
+}
+
+/* Responsive Table Wrapper */
+.super-table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #0B1220;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.super-table-container::-webkit-scrollbar {
+  height: 6px;
+}
+.super-table-container::-webkit-scrollbar-track {
+  background: #0B1220;
+}
+.super-table-container::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+.super-table-container::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+.super-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.86rem;
+  text-align: left;
+  min-width: 600px;
+}
+
+.super-table th {
+  background: #0E1729;
+  color: #94A3B8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+}
+
+.super-table td {
+  padding: 13px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #E2E8F0;
+}
+
+.super-table tr:last-child td {
+  border-bottom: none;
+}
+
+.super-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Responsive Timeframe Bar */
+.super-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #0E1729;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 8px 12px;
+  border-radius: 14px;
+  flex-wrap: wrap;
+  width: fit-content;
+}
+
+.super-filter-pill {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: transparent;
+  color: #94A3B8;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.super-filter-pill.active {
+  background: #10B981;
+  color: #FFFFFF;
+  font-weight: 800;
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.35);
+}
+
+/* Tablet & Mobile Breakpoints */
+@media (max-width: 1023px) {
+  .super-admin-layout {
+    flex-direction: column;
+  }
+
+  .super-admin-mobile-header {
+    display: flex;
+  }
+
+  .super-admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 285px;
+    z-index: 160;
+    transform: translateX(-100%);
+    box-shadow: none;
+  }
+
+  .super-admin-sidebar.open {
+    transform: translateX(0);
+    box-shadow: 15px 0 40px rgba(0, 0, 0, 0.7);
+  }
+
+  .super-admin-main {
+    margin-left: 0;
+    width: 100%;
+    padding: 1.5rem 1.25rem;
+  }
+
+  .super-comparative-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .super-admin-main {
+    padding: 1.2rem 0.9rem;
+  }
+
+  .super-kpi-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .super-filter-bar {
+    width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    padding: 6px 8px;
+  }
+
+  .super-filter-pill {
+    white-space: nowrap;
+    font-size: 0.76rem;
+    padding: 6px 10px;
+  }
+
+  .super-header-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* Super Admin Login Screen */
+.super-admin-login-wrapper {
+  min-height: 100vh;
+  background: radial-gradient(circle at 50% 20%, #131E33 0%, #0B111E 50%, #060911 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.super-admin-login-glow {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  filter: blur(40px);
+}
+
+.super-admin-login-box {
+  max-width: 460px;
+  width: 100%;
+  position: relative;
+  background: linear-gradient(175deg, rgba(17, 27, 43, 0.95) 0%, rgba(13, 21, 36, 0.98) 100%);
+  backdrop-filter: blur(16px);
+  border-radius: 24px;
+  box-shadow: 0 32px 80px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  border: 1px solid rgba(30, 46, 74, 0.9);
+  padding: 2.5rem 2.25rem 2rem;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .super-admin-login-wrapper {
+    padding: 1.25rem 0.85rem;
+  }
+
+  .super-admin-login-box {
+    padding: 1.75rem 1.25rem 1.5rem;
+    border-radius: 20px;
+  }
+}
+

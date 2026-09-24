@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext';
 import { formatINR } from '../../utils/formatters';
 import { AdminHeader } from '../../components/admin/AdminHeader';
 import { ComboFormModal } from '../../components/admin/ComboFormModal';
+import { Modal } from '../../components/ui/Modal';
 import {
   Plus,
   Edit3,
@@ -15,8 +16,10 @@ import {
   Sliders,
   Lock,
   Trash2,
-  UtensilsCrossed
+  UtensilsCrossed,
+  AlertTriangle
 } from 'lucide-react';
+
 
 export const AdminCombosPage = () => {
   const { user } = useAuth();
@@ -31,6 +34,8 @@ export const AdminCombosPage = () => {
   // Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCombo, setEditingCombo] = useState(null);
+  const [comboToDelete, setComboToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
@@ -58,11 +63,15 @@ export const AdminCombosPage = () => {
     }
   };
 
-  const handleToggleSoldOut = async (comboId) => {
+  const handleToggleSoldOut = async (combo) => {
     try {
-      const res = await api.patch(`/combos/admin/${comboId}/toggle-sold-out`);
+      const res = await api.patch(`/combos/admin/${combo._id}/toggle-sold-out`);
       if (res.success) {
-        toast.showSuccess(res.message || 'Combo stock status updated');
+        toast.showSuccess(
+          combo.isSoldOut
+            ? `"${combo.name}" is now in stock`
+            : `"${combo.name}" marked as sold out`
+        );
         loadCatalog();
       }
     } catch (err) {
@@ -70,18 +79,41 @@ export const AdminCombosPage = () => {
     }
   };
 
-  const handleToggleArchive = async (comboId) => {
-    if (!window.confirm('Are you sure you want to delete or archive this combo?')) return;
+  const handleToggleArchive = async (combo) => {
     try {
-      const res = await api.patch(`/combos/admin/${comboId}/toggle-archive`);
+      const res = await api.patch(`/combos/admin/${combo._id}/toggle-archive`);
       if (res.success) {
-        toast.showSuccess(res.message || 'Combo archived');
+        toast.showSuccess(
+          combo.isArchived
+            ? `"${combo.name}" restored to menu`
+            : `"${combo.name}" moved to archive`
+        );
         loadCatalog();
       }
     } catch (err) {
       toast.showError(err.message || 'Failed to toggle archive');
     }
   };
+
+  const confirmDeleteCombo = async () => {
+    if (!comboToDelete) return;
+    const targetName = comboToDelete.name;
+    const targetId = comboToDelete._id;
+    try {
+      setDeleting(true);
+      const res = await api.delete(`/combos/admin/${targetId}`);
+      if (res.success) {
+        toast.showSuccess(res.message || `Combo "${targetName}" deleted successfully`);
+        setComboToDelete(null);
+        loadCatalog();
+      }
+    } catch (err) {
+      toast.showError(err.message || 'Failed to delete combo');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
 
   // Filtered combos based on live search
   const filteredCombos = combos.filter((c) => {
@@ -302,7 +334,7 @@ export const AdminCombosPage = () => {
                             </button>
                             <button
                               type="button"
-                              onClick={() => handleToggleSoldOut(c._id)}
+                              onClick={() => handleToggleSoldOut(c)}
                               className="combo-action-btn btn-visibility"
                               title={c.isSoldOut ? 'Mark In Stock' : 'Mark Sold Out'}
                             >
@@ -310,11 +342,19 @@ export const AdminCombosPage = () => {
                             </button>
                             <button
                               type="button"
-                              onClick={() => handleToggleArchive(c._id)}
-                              className="combo-action-btn btn-delete"
-                              title={c.isArchived ? 'Restore' : 'Delete / Archive'}
+                              onClick={() => handleToggleArchive(c)}
+                              className="combo-action-btn btn-visibility"
+                              title={c.isArchived ? 'Restore to Menu' : 'Move to Archive'}
                             >
-                              {c.isArchived ? <Archive size={15} color="#16A34A" /> : <Trash2 size={15} color="#DC2626" />}
+                              <Archive size={15} color={c.isArchived ? '#16A34A' : '#6C5E53'} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setComboToDelete(c)}
+                              className="combo-action-btn btn-delete"
+                              title="Delete Combo Permanently"
+                            >
+                              <Trash2 size={15} color="#DC2626" />
                             </button>
                           </div>
                         </td>
@@ -407,19 +447,19 @@ export const AdminCombosPage = () => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '6px',
-                        padding: '6px 10px',
-                        fontSize: '0.8rem',
+                        padding: '8px 10px',
+                        fontSize: '0.82rem',
                         fontWeight: 700,
                         borderRadius: '8px'
                       }}
                     >
-                      <Edit3 size={13} />
+                      <Edit3 size={14} />
                       <span>Edit</span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => handleToggleSoldOut(c._id)}
+                      onClick={() => handleToggleSoldOut(c)}
                       className="combo-action-btn btn-visibility"
                       title={c.isSoldOut ? 'Mark In Stock' : 'Mark Sold Out'}
                     >
@@ -428,11 +468,20 @@ export const AdminCombosPage = () => {
 
                     <button
                       type="button"
-                      onClick={() => handleToggleArchive(c._id)}
-                      className="combo-action-btn btn-delete"
-                      title={c.isArchived ? 'Restore' : 'Delete'}
+                      onClick={() => handleToggleArchive(c)}
+                      className="combo-action-btn btn-visibility"
+                      title={c.isArchived ? 'Restore to Menu' : 'Move to Archive'}
                     >
-                      {c.isArchived ? <Archive size={15} color="#16A34A" /> : <Trash2 size={15} color="#DC2626" />}
+                      <Archive size={15} color={c.isArchived ? '#16A34A' : '#6C5E53'} />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setComboToDelete(c)}
+                      className="combo-action-btn btn-delete"
+                      title="Delete Combo"
+                    >
+                      <Trash2 size={15} color="#DC2626" />
                     </button>
                   </div>
                 </div>
@@ -450,6 +499,71 @@ export const AdminCombosPage = () => {
         cafeName={user?.cafe?.name}
         onSaved={loadCatalog}
       />
+
+      {/* Delete Confirmation Modal with Toast Result */}
+      <Modal
+        isOpen={Boolean(comboToDelete)}
+        onClose={() => !deleting && setComboToDelete(null)}
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#DC2626' }}>
+            <AlertTriangle size={20} />
+            <span>Delete Combo Permanently</span>
+          </div>
+        }
+        maxWidth="440px"
+        footer={
+          <>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => setComboToDelete(null)}
+              disabled={deleting}
+              style={{ borderRadius: '10px', fontWeight: 600 }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={confirmDeleteCombo}
+              disabled={deleting}
+              style={{
+                background: '#DC2626',
+                borderColor: '#DC2626',
+                borderRadius: '10px',
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <Trash2 size={15} />
+              <span>{deleting ? 'Deleting...' : 'Delete Permanently'}</span>
+            </button>
+          </>
+        }
+      >
+        <div style={{ padding: '0.5rem 0' }}>
+          <p style={{ color: '#1E140E', fontSize: '0.94rem', lineHeight: 1.5, margin: '0 0 10px' }}>
+            Are you sure you want to permanently delete{' '}
+            <strong style={{ color: '#C25E30' }}>"{comboToDelete?.name}"</strong>?
+          </p>
+          <div
+            style={{
+              padding: '10px 14px',
+              borderRadius: '10px',
+              background: '#FEF2F2',
+              border: '1px solid #FEE2E2',
+              color: '#991B1B',
+              fontSize: '0.8rem',
+              lineHeight: 1.4
+            }}
+          >
+            This action cannot be undone. The combo will be immediately removed from the customer menu.
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
+

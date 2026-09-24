@@ -299,8 +299,8 @@ export const SuperAdminUsersPage = () => {
             No users found matching the selected filter.
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
+          <div className="super-table-container">
+            <table className="super-table">
               <thead>
                 <tr style={{ borderBottom: '1px solid #1E293B', textAlign: 'left', color: '#64748B', background: '#090E17' }}>
                   <th style={{ padding: '12px 16px', fontWeight: 700, fontSize: '0.72rem', textTransform: 'uppercase' }}>User / Name</th>

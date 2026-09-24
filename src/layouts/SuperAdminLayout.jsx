@@ -1,22 +1,23 @@
-import React, { useEffect } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   ShoppingBag,
   BarChart3,
   Users,
   LogOut,
-  ShieldAlert,
   ShieldCheck,
-  Store,
-  ExternalLink,
-  ChevronRight
+  ChevronRight,
+  Menu,
+  X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const SuperAdminLayout = () => {
   const { user, loading, isSuperAdmin, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && (!user || !isSuperAdmin)) {
@@ -24,21 +25,13 @@ export const SuperAdminLayout = () => {
     }
   }, [user, loading, isSuperAdmin, navigate]);
 
-  if (loading) {
-    return (
-      <div style={{
-        height: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#0B0F17',
-        color: '#94A3B8',
-        fontWeight: 600,
-        fontFamily: "'Inter', sans-serif"
-      }}>
-        Verifying Super Administrator Authority...
-      </div>
-    );
+  // Close mobile drawer on route navigation
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
+  if (loading && !user) {
+    return null;
   }
 
   if (!user || !isSuperAdmin) return null;
@@ -51,17 +44,49 @@ export const SuperAdminLayout = () => {
   ];
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#090D16', color: '#F1F5F9', fontFamily: "'Inter', -apple-system, sans-serif" }}>
+    <div className="super-admin-layout">
+      {/* Mobile Top Header */}
+      <header className="super-admin-mobile-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '9px',
+            background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <ShieldCheck size={18} color="#FFFFFF" strokeWidth={2.4} />
+          </div>
+          <div>
+            <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#F8FAFC', lineHeight: 1.1 }}>
+              JEC DINING
+            </div>
+            <div style={{ fontSize: '0.62rem', fontWeight: 700, color: '#34D399', letterSpacing: '0.08em' }}>
+              SUPER ADMIN
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className="super-admin-mobile-menu-btn"
+          aria-label="Toggle navigation menu"
+        >
+          {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </header>
+
+      {/* Backdrop for mobile drawer */}
+      <div
+        className={`super-admin-backdrop ${mobileOpen ? 'active' : ''}`}
+        onClick={() => setMobileOpen(false)}
+      />
+
       {/* Super Admin Executive Sidebar */}
-      <aside style={{
-        width: '280px',
-        background: 'linear-gradient(180deg, #0D1524 0%, #080D17 100%)',
-        borderRight: '1px solid #1E293B',
-        display: 'flex',
-        flexDirection: 'column',
-        boxShadow: '8px 0 30px rgba(0, 0, 0, 0.45)',
-        zIndex: 40
-      }}>
+      <aside className={`super-admin-sidebar ${mobileOpen ? 'open' : ''}`}>
         {/* Brand Header */}
         <div style={{
           padding: '1.5rem 1.35rem',
@@ -269,8 +294,10 @@ export const SuperAdminLayout = () => {
       </aside>
 
       {/* Main Content Area */}
-      <main style={{ flex: 1, overflowY: 'auto', minWidth: 0, padding: '2rem 2.5rem' }}>
-        <Outlet />
+      <main className="super-admin-main">
+        <div className="super-admin-content-wrap">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

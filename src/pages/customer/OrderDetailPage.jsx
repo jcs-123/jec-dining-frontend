@@ -4,6 +4,7 @@ import { api } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { formatINR, formatKolkataTime, getStatusBadgeClass } from '../../utils/formatters';
 import { ArrowLeft, Printer, Clock, MapPin, CheckCircle2, XCircle, AlertCircle, Coffee, Zap, Calendar, Mail, QrCode } from 'lucide-react';
+import { generateQrDataUrl } from '../../utils/qrCode';
 
 const STATUS_STEPS = ['Pending', 'Accepted', 'Preparing', 'Ready for Pickup', 'Completed'];
 
@@ -16,6 +17,14 @@ export const OrderDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
+
+  useEffect(() => {
+    if (order?.orderNumber || order?._id) {
+      const qrData = order.orderNumber || order._id;
+      generateQrDataUrl(qrData).then(setQrCodeUrl);
+    }
+  }, [order?.orderNumber, order?._id]);
 
   useEffect(() => {
     loadOrder();
@@ -37,7 +46,8 @@ export const OrderDetailPage = () => {
   };
 
   const handlePrintReceipt = () => {
-    window.open(`http://localhost:5000/api/orders/${orderId}/receipt`, '_blank');
+    const apiBase = import.meta.env.VITE_API_URL || 'https://jec-dining-backend.onrender.com/api';
+    window.open(`${apiBase}/orders/${orderId}/receipt`, '_blank');
   };
 
   const handleSendGmailReceipt = async () => {
@@ -132,14 +142,15 @@ export const OrderDetailPage = () => {
           marginBottom: '1.5rem'
         }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <h1 style={{
                 fontFamily: "'Fraunces', Georgia, serif",
-                fontSize: '1.75rem',
+                fontSize: 'clamp(1.2rem, 3.5vw, 1.75rem)',
                 fontWeight: 800,
                 color: '#1E140E',
                 margin: 0,
-                letterSpacing: '-0.02em'
+                letterSpacing: '-0.02em',
+                wordBreak: 'break-word'
               }}>
                 Order #{order.orderNumber}
               </h1>
@@ -172,47 +183,6 @@ export const OrderDetailPage = () => {
               <Printer size={14} color="#D66C3E" />
               <span>Download Receipt</span>
             </button>
-            <button
-              onClick={handleSendGmailReceipt}
-              disabled={sendingEmail}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '0.45rem 0.9rem',
-                borderRadius: '16px',
-                border: '1.5px solid #EADBCC',
-                background: '#FFFFFF',
-                color: '#D66C3E',
-                fontSize: '0.82rem',
-                fontWeight: 700,
-                cursor: 'pointer'
-              }}
-            >
-              <Mail size={14} />
-              <span>{sendingEmail ? 'Sending...' : 'Send to Gmail'}</span>
-            </button>
-            {canCancel && (
-              <button
-                onClick={handleCancelOrder}
-                disabled={cancelling}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '0.45rem 0.9rem',
-                  borderRadius: '16px',
-                  border: '1px solid rgba(220, 60, 60, 0.4)',
-                  background: 'rgba(220, 60, 60, 0.08)',
-                  color: '#DC2626',
-                  fontSize: '0.82rem',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-              >
-                Cancel Order
-              </button>
-            )}
           </div>
         </div>
 
@@ -312,15 +282,8 @@ export const OrderDetailPage = () => {
             <div>
               <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.04em' }}>SCHEDULED PICKUP</div>
               <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>
-                {order.pickupDate || 'Today'} • {order.pickupTimeSlot || 'Immediate'}
+                {order.pickupDate || 'Today'}
               </div>
-            </div>
-          </div>
-
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.04em' }}>PAYMENT STATUS</div>
-            <div style={{ fontWeight: 800, fontSize: '1rem', color: order.paymentStatus === 'Paid' ? 'var(--status-veg)' : '#D97706' }}>
-              {order.paymentStatus}
             </div>
           </div>
         </div>
@@ -340,13 +303,17 @@ export const OrderDetailPage = () => {
           boxShadow: '0 4px 16px rgba(0,0,0,0.04)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/admin/verify-pickup/${order._id}`)}`}
-              alt="Order Pickup QR Code"
-              width="100"
-              height="100"
-              style={{ borderRadius: '10px', display: 'block', border: '1px solid #E2E8F0' }}
-            />
+            {qrCodeUrl ? (
+              <img
+                src={qrCodeUrl}
+                alt="Order Pickup QR Code"
+                width="100"
+                height="100"
+                style={{ borderRadius: '10px', display: 'block', border: '1px solid #E2E8F0' }}
+              />
+            ) : (
+              <div style={{ width: '100px', height: '100px', background: '#F8FAFC', borderRadius: '10px', border: '1px solid #E2E8F0' }} />
+            )}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.825rem', fontWeight: 800, color: 'var(--brand-accent)' }}>
                 <QrCode size={16} />

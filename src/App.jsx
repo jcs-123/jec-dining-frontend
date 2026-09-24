@@ -31,6 +31,7 @@ import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { AdminOrdersPage } from './pages/admin/AdminOrdersPage';
 import { AdminCombosPage } from './pages/admin/AdminCombosPage';
 import { AdminCategoriesPage } from './pages/admin/AdminCategoriesPage';
+import { AdminItemsPage } from './pages/admin/AdminItemsPage';
 import { AdminReportsPage } from './pages/admin/AdminReportsPage';
 import { AdminSettingsPage } from './pages/admin/AdminSettingsPage';
 import { AdminPickupVerificationPage } from './pages/admin/AdminPickupVerificationPage';
@@ -77,6 +78,7 @@ export function App() {
                   <Route path="orders" element={<AdminOrdersPage />} />
                   <Route path="combos" element={<AdminCombosPage />} />
                   <Route path="categories" element={<AdminCategoriesPage />} />
+                  <Route path="items" element={<AdminItemsPage />} />
                   <Route path="reports" element={<AdminReportsPage />} />
                   <Route path="settings" element={<AdminSettingsPage />} />
                   <Route path="verify-pickup/:orderId" element={<AdminPickupVerificationPage />} />
@@ -95,7 +97,7 @@ export function App() {
 
                   {/* Ordering & Checkout Flow */}
                   <Route path="/checkout" element={<CheckoutPage />} />
-                  <Route path="/payment/:orderId" element={<PaymentPage />} />
+                  <Route path="/payment/:orderId" element={<Navigate to="/my-orders" replace />} />
                   <Route path="/order-success/:orderId" element={<OrderSuccessPage />} />
                   <Route path="/my-orders" element={<MyOrdersPage />} />
                   <Route path="/order/:orderId" element={<OrderDetailPage />} />

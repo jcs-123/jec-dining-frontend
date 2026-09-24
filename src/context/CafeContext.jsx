@@ -11,45 +11,75 @@ export const normalizeCafeSlug = (slug) => {
   return lower;
 };
 
+const DEFAULT_CAFES = [
+  { _id: 'jeccafe-default', slug: 'jeccafe', name: 'JECCAFE', isOpen: true, address: 'Central Plaza, JEC Campus', openingHours: '07:00 AM – 07:00 PM' },
+  { _id: 'jecbytes-default', slug: 'jecbytes', name: 'JEC BYTES', isOpen: true, address: 'Food Court Wing, JEC Campus', openingHours: '08:00 AM – 08:00 PM' }
+];
+
+const sanitizeCafe = (c) => {
+  if (!c) return c;
+  const copy = { ...c };
+  if (copy.slug === 'jeccafe' || copy.slug === 'jec-cafe') {
+    copy.name = 'JECCAFE';
+  } else if (copy.slug === 'jecbytes' || copy.slug === 'jec-bytes' || copy.slug === 'jec-bytest') {
+    copy.name = 'JEC BYTES';
+  }
+  return copy;
+};
+
 export const CafeProvider = ({ children }) => {
-  const [cafes, setCafes] = useState([]);
+  const [cafes, setCafes] = useState(() => {
+    try {
+      const saved = localStorage.getItem('jec_cached_cafes');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map(sanitizeCafe);
+        }
+      }
+      return DEFAULT_CAFES;
+    } catch {
+      return DEFAULT_CAFES;
+    }
+  });
+
   const [currentCafe, setCurrentCafe] = useState(() => {
     try {
       const saved = localStorage.getItem('jec_active_cafe');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed && (parsed.slug === 'jec-bytest' || parsed.slug === 'jec-bytes')) {
-          parsed.slug = 'jecbytes';
+        if (parsed) {
+          return sanitizeCafe(parsed);
         }
-        return parsed;
       }
-      return null;
+      return DEFAULT_CAFES[0];
     } catch {
-      return null;
+      return DEFAULT_CAFES[0];
     }
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const fetchCafes = async () => {
     try {
-      setLoading(true);
       const res = await api.get('/cafes');
-      if (res.success && res.cafes) {
-        setCafes(res.cafes);
+      if (res.success && res.cafes && res.cafes.length > 0) {
+        const sanitized = res.cafes.map(sanitizeCafe);
+        setCafes(sanitized);
+        localStorage.setItem('jec_cached_cafes', JSON.stringify(sanitized));
 
         // Auto-detect active cafe from URL or storage
         const pathSlug = window.location.pathname.replace(/^\//, '').split('/')[0].toLowerCase();
         let target = null;
         if (pathSlug === 'jeccafe' || pathSlug === 'jecbytes' || pathSlug === 'jec-bytes' || pathSlug === 'jec-bytest') {
           const querySlug = pathSlug.includes('byte') ? 'jecbytes' : 'jeccafe';
-          target = res.cafes.find(c => c.slug === querySlug || c.slug === pathSlug);
+          target = sanitized.find(c => c.slug === querySlug || c.slug === pathSlug);
         }
         if (!target && currentCafe) {
           const currentSlug = (currentCafe.slug || '').includes('byte') ? 'jecbytes' : currentCafe.slug;
-          target = res.cafes.find(c => c.slug === currentSlug || c.slug === currentCafe.slug);
+          target = sanitized.find(c => c.slug === currentSlug || c.slug === currentCafe.slug);
         }
-        if (!target && res.cafes.length > 0) {
-          target = res.cafes[0];
+        if (!target && sanitized.length > 0) {
+          target = sanitized[0];
         }
 
         if (target) {
@@ -77,7 +107,7 @@ export const CafeProvider = ({ children }) => {
     }
     const raw = slug.toLowerCase();
     const targetSlug = raw.includes('byte') ? 'jecbytes' : (raw.includes('cafe') ? 'jeccafe' : raw);
-    const sourceList = list && list.length > 0 ? list : cafes;
+    const sourceList = (list && list.length > 0 ? list : cafes).map(sanitizeCafe);
     const found = sourceList.find(c => c.slug === targetSlug || c.slug === raw);
     if (found) {
       setCurrentCafe(found);

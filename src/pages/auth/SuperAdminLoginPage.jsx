@@ -39,30 +39,9 @@ export const SuperAdminLoginPage = () => {
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'radial-gradient(circle at 50% 20%, #131E33 0%, #0B111E 50%, #060911 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '2rem 1.25rem',
-        fontFamily: "'Inter', -apple-system, sans-serif"
-      }}
-    >
-      <div
-        style={{
-          maxWidth: '460px',
-          width: '100%',
-          position: 'relative',
-          background: 'linear-gradient(175deg, #111B2B 0%, #0D1524 100%)',
-          borderRadius: '24px',
-          boxShadow: '0 32px 80px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08) inset',
-          border: '1px solid #1E2E4A',
-          padding: '2.5rem 2.25rem 2rem',
-          overflow: 'hidden'
-        }}
-      >
+    <div className="super-admin-login-wrapper">
+      <div className="super-admin-login-glow" />
+      <div className="super-admin-login-box">
         {/* Top Header Stamp */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
           <Link

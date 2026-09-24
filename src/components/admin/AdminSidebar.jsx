@@ -12,6 +12,7 @@ import {
   Zap,
   ChevronRight,
   QrCode,
+  Package,
   X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -30,6 +31,7 @@ export const AdminSidebar = ({ isMobile = false, onClose }) => {
     { label: 'Scan & Deliver', icon: QrCode, path: `/${cafeSlug}/admin/orders?scan=true` },
     { label: 'Combo Catalog', icon: UtensilsCrossed, path: `/${cafeSlug}/admin/combos` },
     { label: 'Categories', icon: Tags, path: `/${cafeSlug}/admin/categories` },
+    { label: 'Items Catalog', icon: Package, path: `/${cafeSlug}/admin/items` },
     { label: 'Sales Reports', icon: BarChart3, path: `/${cafeSlug}/admin/reports` },
     { label: 'Café Settings', icon: Settings, path: `/${cafeSlug}/admin/settings` }
   ];

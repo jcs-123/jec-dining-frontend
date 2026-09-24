@@ -100,69 +100,60 @@ export const MyOrdersPage = () => {
               <Link
                 key={o._id}
                 to={`/order/${o._id}`}
-                className="card card-interactive"
-                style={{
-                  padding: '1.25rem 1.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '1rem',
-                  textDecoration: 'none',
-                  background: '#FFFFFF',
-                  border: '1.5px solid #EADBCC',
-                  borderRadius: '16px',
-                  boxShadow: '0 4px 14px rgba(50, 30, 15, 0.04)',
-                  transition: 'all 0.2s ease'
-                }}
+                className="my-order-card"
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
-                  <div style={{
-                    background: isJeccafe
-                      ? 'linear-gradient(135deg, #361D11 0%, #7E4323 100%)'
-                      : 'linear-gradient(135deg, #0A3D40 0%, #157E82 100%)',
-                    color: '#FFFFFF',
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    boxShadow: '0 2px 8px rgba(50, 30, 15, 0.12)'
-                  }}>
+                <div className="my-order-left">
+                  <div
+                    className="my-order-icon"
+                    style={{
+                      background: isJeccafe
+                        ? 'linear-gradient(135deg, #361D11 0%, #7E4323 100%)'
+                        : 'linear-gradient(135deg, #0A3D40 0%, #157E82 100%)'
+                    }}
+                  >
                     {isJeccafe ? <Coffee size={22} /> : <Zap size={22} />}
                   </div>
 
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '2px' }}>
-                      <span style={{ fontWeight: 800, fontSize: '1.05rem', color: '#1E140E' }}>
+                  <div className="my-order-details">
+                    <div className="my-order-header-row">
+                      <span className="my-order-number">
                         #{o.orderNumber}
                       </span>
-                      <span className={`badge ${getStatusBadgeClass(o.orderStatus)}`}>
+                      <span className={`badge ${getStatusBadgeClass(o.orderStatus)}`} style={{ fontSize: '0.72rem', padding: '2px 8px' }}>
                         {o.orderStatus}
                       </span>
                     </div>
 
-                    <div style={{ fontSize: '0.82rem', color: '#7A6E63', marginBottom: '4px', fontWeight: 500 }}>
-                      {o.cafeId?.name} • {formatKolkataTime(o.createdAt)}
+                    <div style={{ fontSize: '0.82rem', color: '#7A6E63', marginBottom: '4px', fontWeight: 500, wordBreak: 'break-word' }}>
+                      {o.cafeId?.name || 'Campus Dining'} • {formatKolkataTime(o.createdAt)}
                     </div>
 
-                    <div style={{ fontSize: '0.82rem', color: '#4A423B', opacity: 0.9 }}>
-                      {o.items.map(i => `${i.name} (${i.quantity}x)`).join(', ')}
+                    <div style={{ fontSize: '0.82rem', color: '#4A423B', opacity: 0.9, wordBreak: 'break-word' }}>
+                      {o.items.map(i => `${i.name || i.comboName || 'Combo'} (${i.quantity || 1}x)`).join(', ')}
                     </div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0 }}>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#D66C3E' }}>
+                <div className="my-order-right">
+                  <span style={{
+                    fontSize: '0.74rem',
+                    fontWeight: 700,
+                    color: o.paymentStatus === 'Paid' ? '#15803D' : '#9A3412',
+                    background: o.paymentStatus === 'Paid' ? '#DCFCE7' : '#FFEDD5',
+                    border: o.paymentStatus === 'Paid' ? '1px solid #86EFAC' : '1px solid #FDBA74',
+                    padding: '2px 8px',
+                    borderRadius: '8px',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {o.paymentStatus || 'Cash on Delivery'}
+                  </span>
+
+                  <div className="my-order-right-action" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className="my-order-price">
                       {formatINR(o.totalPaise)}
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: o.paymentStatus === 'Paid' ? '#15803D' : '#D97706', fontWeight: 700 }}>
-                      {o.paymentStatus}
-                    </div>
+                    <ChevronRight size={18} color="#8C7E74" style={{ flexShrink: 0 }} />
                   </div>
-                  <ChevronRight size={18} color="#8C7E74" />
                 </div>
               </Link>
             );

@@ -28,13 +28,18 @@ export const AdminPickupVerificationPage = () => {
       // First try admin order detail or list
       const res = await api.get(`/orders/my-orders/${orderId}`).catch(async () => {
         // If customer endpoint fails (e.g. admin session), try admin list query
-        return await api.get(`/orders/admin/list?search=${orderId}`);
+        return await api.get(`/orders/admin/list?search=${encodeURIComponent(orderId)}`);
       });
 
       if (res && res.order) {
         setOrder(res.order);
       } else if (res && res.orders && res.orders.length > 0) {
-        setOrder(res.orders[0]);
+        const matched = res.orders.find(
+          (o) =>
+            (o.orderNumber && o.orderNumber.toUpperCase() === orderId.toUpperCase()) ||
+            (o._id && o._id.toString() === orderId)
+        ) || res.orders[0];
+        setOrder(matched);
       } else {
         setErrorMsg('Order not found or permission denied');
       }
@@ -49,7 +54,8 @@ export const AdminPickupVerificationPage = () => {
   const handleConfirmPickup = async () => {
     try {
       setVerifying(true);
-      const res = await api.post(`/orders/admin/${orderId}/verify-pickup`);
+      const targetId = order?._id || orderId;
+      const res = await api.post(`/orders/admin/${targetId}/verify-pickup`);
       if (res.success && res.order) {
         setOrder(res.order);
         toast.success(`Order #${res.order.orderNumber} successfully marked as Delivered!`);
@@ -151,9 +157,9 @@ export const AdminPickupVerificationPage = () => {
           </div>
 
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>PAYMENT STATUS</div>
-            <div style={{ fontWeight: 800, color: order.paymentStatus === 'Paid' ? 'var(--status-veg)' : '#D97706', fontSize: '0.95rem' }}>
-              {order.paymentStatus}
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ORDER STATUS</div>
+            <div style={{ fontWeight: 800, color: order.orderStatus === 'Completed' ? 'var(--status-veg)' : 'var(--brand-accent)', fontSize: '0.95rem' }}>
+              {order.orderStatus}
             </div>
           </div>
         </div>
@@ -171,7 +177,7 @@ export const AdminPickupVerificationPage = () => {
         }}>
           <Calendar size={18} color="var(--brand-accent)" />
           <div style={{ fontSize: '0.875rem' }}>
-            <strong>Scheduled Pickup:</strong> {order.pickupDate || 'Today'} • {order.pickupTimeSlot || 'Immediate'}
+            <strong>Scheduled Pickup:</strong> {order.pickupDate || 'Today'}
           </div>
         </div>
 

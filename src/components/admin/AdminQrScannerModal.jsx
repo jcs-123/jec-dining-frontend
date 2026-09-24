@@ -123,6 +123,11 @@ export const AdminQrScannerModal = ({ isOpen, onClose, onOrderDelivered }) => {
       return clean.replace('ORDER:', '').trim();
     }
 
+    // Strip leading hash if present (e.g. #ORD-123)
+    if (clean.startsWith('#')) {
+      return clean.replace(/^#+/, '').trim();
+    }
+
     return clean;
   };
 
@@ -141,18 +146,24 @@ export const AdminQrScannerModal = ({ isOpen, onClose, onOrderDelivered }) => {
 
       let foundOrder = null;
 
-      // 1. Try direct ID
+      // 1. Try admin list search by orderNumber / ID
       try {
-        const res = await api.get(`/orders/my-orders/${queryId}`);
-        if (res.success && res.order) foundOrder = res.order;
-      } catch {}
-
-      // 2. Try admin list search
-      if (!foundOrder) {
         const searchRes = await api.get(`/orders/admin/list?search=${encodeURIComponent(queryId)}`);
         if (searchRes.success && searchRes.orders && searchRes.orders.length > 0) {
-          foundOrder = searchRes.orders[0];
+          foundOrder = searchRes.orders.find(
+            (o) =>
+              (o.orderNumber && o.orderNumber.toUpperCase() === queryId.toUpperCase()) ||
+              (o._id && o._id.toString() === queryId)
+          ) || searchRes.orders[0];
         }
+      } catch {}
+
+      // 2. Try direct ID fallback
+      if (!foundOrder) {
+        try {
+          const res = await api.get(`/orders/my-orders/${queryId}`);
+          if (res.success && res.order) foundOrder = res.order;
+        } catch {}
       }
 
       if (foundOrder) {
@@ -476,7 +487,6 @@ export const AdminQrScannerModal = ({ isOpen, onClose, onOrderDelivered }) => {
                     <span>Pickup Date</span>
                   </div>
                   <strong style={{ color: '#1E140E' }}>{scannedOrder.pickupDate || 'Today'}</strong>
-                  <div style={{ fontSize: '0.78rem', color: '#8A7264' }}>Slot: {scannedOrder.pickupTimeSlot || 'Immediate'}</div>
                 </div>
               </div>
 

@@ -51,38 +51,38 @@ export const CafeMenuPage = () => {
 
   useEffect(() => {
     let active = true;
-    const slug = cafeSlug || location.pathname.replace(/^\//, '').split('/')[0] || 'jeccafe';
-    if (slug) {
-      setSelectedCategory('all');
-      setSearchQuery('');
-      setVegFilter('all');
-      setCombos([]);
-      setCategories([]);
+    const rawPath = location.pathname.replace(/^\//, '').split('/')[0].toLowerCase();
+    const slug = (rawPath === 'jeccafe' || rawPath.includes('byte'))
+      ? (rawPath.includes('byte') ? 'jecbytes' : 'jeccafe')
+      : (cafeSlug || 'jeccafe');
 
-      const load = async () => {
-        try {
-          setLoading(true);
-          selectCafeBySlug(slug);
+    setSelectedCategory('all');
+    setSearchQuery('');
+    setVegFilter('all');
+    setLoading(true);
 
-          const [cafeRes, catRes, comboRes] = await Promise.all([
-            api.get(`/cafes/${slug}`),
-            api.get(`/categories/cafe/${slug}`),
-            api.get(`/combos/cafe/${slug}`)
-          ]);
+    const load = async () => {
+      try {
+        selectCafeBySlug(slug);
 
-          if (!active) return;
-          if (cafeRes.success) setCafe(cafeRes.cafe);
-          if (catRes.success) setCategories(catRes.categories || []);
-          if (comboRes.success) setCombos(comboRes.combos || []);
-        } catch (err) {
-          if (active) console.error('Failed to load menu:', err);
-        } finally {
-          if (active) setLoading(false);
-        }
-      };
+        const [cafeRes, catRes, comboRes] = await Promise.all([
+          api.get(`/cafes/${slug}`),
+          api.get(`/categories/cafe/${slug}`),
+          api.get(`/combos/cafe/${slug}`)
+        ]);
 
-      load();
-    }
+        if (!active) return;
+        setCafe(cafeRes.success ? cafeRes.cafe : null);
+        setCategories(catRes.success ? (catRes.categories || []) : []);
+        setCombos(comboRes.success ? (comboRes.combos || []) : []);
+      } catch (err) {
+        if (active) console.error('Failed to load menu:', err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    load();
 
     return () => {
       active = false;

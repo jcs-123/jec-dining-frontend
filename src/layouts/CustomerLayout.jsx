@@ -19,20 +19,11 @@ export const CustomerLayout = () => {
     }
   }, [location.pathname, cafes]);
 
-  if (loading) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAF8F5' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1A1816', marginBottom: '8px' }}>
-            Loading JEC Dining...
-          </div>
-          <div style={{ fontSize: '0.85rem', color: '#78716C' }}>Verifying campus session...</div>
-        </div>
-      </div>
-    );
+  if (loading && !isAuthenticated) {
+    return null;
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !loading) {
     // After login only: redirect unauthenticated users to login
     return <Navigate to={`/auth?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
