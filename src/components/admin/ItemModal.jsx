@@ -125,8 +125,9 @@ export const ItemModal = ({ isOpen, onClose, item, onSaved, existingCategories =
             <datalist id="item-categories-list">
               <option value="Breakfast" />
               <option value="Lunch" />
-              <option value="Tea" />
+              <option value="Tea & Snacks" />
               <option value="Dinner" />
+              <option value="Dinner Curry" />
               <option value="Kitchen Essentials" />
               <option value="Meal Component" />
               <option value="Bakery & Desserts" />

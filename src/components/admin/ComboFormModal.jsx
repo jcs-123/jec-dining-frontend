@@ -127,15 +127,17 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
   };
 
   // Fixed item helpers - Simple & Direct "Add Item / Delete Item / Delete All"
-  const addFixedItem = (customName = '', customQty = null, customNotes = '') => {
+  const addFixedItem = (customName = '', customQty = null, customNotes = '', customCategory = '') => {
     let initialQty = customQty;
     let initialNotes = customNotes;
+    let category = customCategory;
 
-    if (customName && (!initialQty || initialQty <= 0)) {
+    if (customName) {
       const matched = dbItems.find(it => it.name.toLowerCase() === customName.toLowerCase());
       if (matched) {
-        initialQty = getItemDefaultQty(matched);
+        if (!initialQty || initialQty <= 0) initialQty = getItemDefaultQty(matched);
         initialNotes = initialNotes || matched.defaultNotes || '';
+        category = category || matched.category || '';
       }
     }
 
@@ -145,6 +147,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
         name: customName || '',
         quantity: initialQty || 1,
         notes: initialNotes || '',
+        category: category || '',
         isCustom: false
       }
     ]);
@@ -156,7 +159,8 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
       updated[fIdx] = {
         ...updated[fIdx],
         isCustom: true,
-        name: ''
+        name: '',
+        category: updated[fIdx].category || ''
       };
       setFixedItems(updated);
       return;
@@ -165,6 +169,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
     const matchedItem = dbItems.find(it => it.name === selectedValue);
     const autoQty = matchedItem ? getItemDefaultQty(matchedItem) : 1;
     const autoNotes = matchedItem?.defaultNotes || '';
+    const autoCategory = matchedItem?.category || '';
 
     const updated = [...fixedItems];
     updated[fIdx] = {
@@ -172,7 +177,8 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
       name: selectedValue,
       quantity: autoQty,
       isCustom: false,
-      notes: updated[fIdx].notes || autoNotes
+      notes: updated[fIdx].notes || autoNotes,
+      category: autoCategory || updated[fIdx].category || ''
     };
     setFixedItems(updated);
   };
@@ -224,7 +230,8 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
             ...updated[activeRowIdx],
             name: res.item.name,
             quantity: res.item.defaultQty || 1,
-            notes: res.item.defaultNotes || ''
+            notes: res.item.defaultNotes || '',
+            category: res.item.category || newItemCategory || ''
           };
           setFixedItems(updated);
         }
@@ -888,6 +895,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
                 <option value="Lunch" />
                 <option value="Tea & Snacks" />
                 <option value="Dinner" />
+                <option value="Dinner Curry" />
                 {catalogCategories.map((c, i) => (
                   <option key={i} value={c} />
                 ))}
@@ -938,7 +946,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
       {/* Sub-Modal: Manage & Delete Items in Dropdown */}
       <Modal
         isOpen={showManageItemsModal}
-        onClose={() => { setShowManageItemsModal(false); setItemsSearchFilter(''); setManageCategoryFilter('All'); }}
+        onClose={() => { setShowManageItemsModal(false); setItemsSearchFilter(''); }}
         title="Manage Dropdown Catalog Items"
         maxWidth="520px"
         footer={

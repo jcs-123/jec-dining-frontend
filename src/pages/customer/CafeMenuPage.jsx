@@ -590,6 +590,7 @@ export const CafeMenuPage = () => {
                 <ComboCard
                   key={combo._id}
                   combo={combo}
+                  cafe={cafe}
                   defaultDate={menuActiveDate}
                   onQuickAdd={handleQuickAdd}
                 />
