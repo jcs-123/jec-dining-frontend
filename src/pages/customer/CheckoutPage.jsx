@@ -119,10 +119,16 @@ export const CheckoutPage = () => {
 
       const res = await api.post('/orders/checkout', payload);
 
-      if (res.success && res.order) {
+      if (res.success && (res.order || (res.orders && res.orders.length > 0))) {
         clearCart();
-        toast.success(res.message || 'Order confirmed! Receipt sent to your email.');
-        navigate(`/order-success/${res.order._id || res.order.id}`, { state: { order: res.order } });
+        const primaryOrder = res.order || res.orders[0];
+        toast.success(res.message || 'Order confirmed! Receipts sent to your email.');
+        navigate(`/order-success/${primaryOrder._id || primaryOrder.id}`, {
+          state: {
+            order: primaryOrder,
+            orders: res.orders && res.orders.length > 0 ? res.orders : [primaryOrder]
+          }
+        });
       }
     } catch (err) {
       toast.error(err.message || 'Failed to place order');
@@ -333,6 +339,25 @@ export const CheckoutPage = () => {
               </div>
             </div>
           </div>
+
+          {/* Distinct Dates Notice */}
+          {new Set(items.map(i => (i.scheduledDate || 'Today').trim())).size > 1 && (
+            <div style={{
+              background: '#FAF6EE',
+              border: '1px solid #EADBCC',
+              borderRadius: '10px',
+              padding: '8px 12px',
+              margin: '0 0 10px 0',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <Calendar size={15} color="#D66C3E" style={{ flexShrink: 0 }} />
+              <div style={{ fontSize: '0.74rem', color: '#6E5C50', lineHeight: 1.35 }}>
+                <strong style={{ color: '#2D1A10' }}>Multiple Dates Detected:</strong> A separate Order ID & official receipt will be generated for each scheduled pickup date.
+              </div>
+            </div>
+          )}
 
           {/* Items List */}
           <div className="checkout-items-scroll">
