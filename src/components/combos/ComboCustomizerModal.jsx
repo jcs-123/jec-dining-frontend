@@ -45,14 +45,17 @@ export const getComboGroups = (combo) => {
 
   items.forEach((item) => {
     let cat = (item.category || '').trim();
-    if (!cat) {
-      const lower = (item.name || '').toLowerCase();
+    const lower = (item.name || '').toLowerCase();
+
+    // Explicitly place Green Beans and curries into Dinner Curry
+    if (/bean|curry|gravy|sambar|kadala/i.test(lower) || /curry.*dinner|dinner.*curry/i.test(cat)) {
+      cat = 'Dinner Curry';
+    } else if (!cat) {
       if (/dosa|idli|puttu|poori|pongal|vada|appam/i.test(lower)) cat = 'Breakfast';
-      else if (/curry|gravy|sambar/i.test(lower)) cat = 'Dinner Curry';
       else if (/biriyani|rice|meals|curd/i.test(lower)) cat = 'Lunch';
       else if (/chappathi|porotta|roti|naan/i.test(lower)) cat = 'Dinner';
       else if (/tea|coffee|snack|puff|samosa/i.test(lower)) cat = 'Tea & Snacks';
-      else cat = 'Included Items';
+      else cat = 'Dinner Curry';
     }
     // Normalize Curry-Dinner
     if (/curry.*dinner|dinner.*curry/i.test(cat)) cat = 'Dinner Curry';
