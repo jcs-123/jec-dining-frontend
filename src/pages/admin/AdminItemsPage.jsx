@@ -24,7 +24,6 @@ export const AdminItemsPage = () => {
   const [combos, setCombos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [dietaryFilter, setDietaryFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -95,16 +94,12 @@ export const AdminItemsPage = () => {
         if (!matchName && !matchCat) return false;
       }
 
-      // Dietary filter
-      if (dietaryFilter === 'veg' && !it.isVeg) return false;
-      if (dietaryFilter === 'nonveg' && it.isVeg) return false;
-
       // Category filter
       if (categoryFilter !== 'all' && it.category !== categoryFilter) return false;
 
       return true;
     });
-  }, [items, search, dietaryFilter, categoryFilter]);
+  }, [items, search, categoryFilter]);
 
   const handleDelete = async (item) => {
     const usedIn = itemComboUsageMap[(item.name || '').toLowerCase()] || [];
@@ -220,19 +215,6 @@ export const AdminItemsPage = () => {
               />
             </div>
 
-            {/* Dietary Filter */}
-            <div style={{ flex: '0 1 170px', minWidth: '140px' }}>
-              <select
-                className="form-select"
-                value={dietaryFilter}
-                onChange={(e) => setDietaryFilter(e.target.value)}
-                style={{ height: '40px', borderRadius: '10px', fontSize: '0.84rem' }}
-              >
-                <option value="all">All Dietary Types</option>
-                <option value="veg">🟢 Pure Veg Only</option>
-                <option value="nonveg">🔴 Non-Veg Only</option>
-              </select>
-            </div>
 
             {/* Category Filter */}
             <div style={{ flex: '0 1 180px', minWidth: '150px' }}>
@@ -280,7 +262,6 @@ export const AdminItemsPage = () => {
                 <thead>
                   <tr>
                     <th>Item Name</th>
-                    <th>Dietary Type</th>
                     <th>Category</th>
                     <th>Used In Combos</th>
                     <th style={{ textAlign: 'right' }}>Actions</th>
@@ -313,19 +294,6 @@ export const AdminItemsPage = () => {
                               Notes: {item.defaultNotes}
                             </div>
                           )}
-                        </td>
-                        <td>
-                          <span style={{
-                            padding: '3px 10px',
-                            borderRadius: '16px',
-                            fontSize: '0.74rem',
-                            fontWeight: 700,
-                            background: item.isVeg ? '#DCFCE7' : '#FEE2E2',
-                            color: item.isVeg ? '#15803D' : '#B91C1C',
-                            border: `1px solid ${item.isVeg ? '#86EFAC' : '#FECACA'}`
-                          }}>
-                            {item.isVeg ? 'Pure Veg' : 'Non-Veg'}
-                          </span>
                         </td>
                         <td>
                           <span className="combo-cat-badge">

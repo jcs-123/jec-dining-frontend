@@ -106,41 +106,31 @@ export const ItemModal = ({ isOpen, onClose, item, onSaved, existingCategories =
           />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-          <div>
-            <label className="form-label">Dietary Type *</label>
-            <select
-              className="form-select"
-              value={isVeg ? 'veg' : 'nonveg'}
-              onChange={(e) => setIsVeg(e.target.value === 'veg')}
-            >
-              <option value="veg">🟢 Pure Veg</option>
-              <option value="nonveg">🔴 Non-Veg</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="form-label">Item Category</label>
-            <input
-              type="text"
-              list="item-categories-list"
-              className="form-input"
-              placeholder="e.g. Kitchen Essentials..."
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            />
-            <datalist id="item-categories-list">
-              <option value="Kitchen Essentials" />
-              <option value="Meal Component" />
-              <option value="Bakery & Desserts" />
-              <option value="Hot Beverages" />
-              <option value="Cold Beverages" />
-              <option value="Sides & Appetizers" />
-              {existingCategories.map((c, i) => (
-                <option key={i} value={c} />
-              ))}
-            </datalist>
-          </div>
+        <div>
+          <label className="form-label">Item Category</label>
+          <input
+            type="text"
+            list="item-categories-list"
+            className="form-input"
+            placeholder="e.g. Breakfast, Lunch, Tea, Dinner..."
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          />
+          <datalist id="item-categories-list">
+            <option value="Breakfast" />
+            <option value="Lunch" />
+            <option value="Tea" />
+            <option value="Dinner" />
+            <option value="Kitchen Essentials" />
+            <option value="Meal Component" />
+            <option value="Bakery & Desserts" />
+            <option value="Hot Beverages" />
+            <option value="Cold Beverages" />
+            <option value="Sides & Appetizers" />
+            {existingCategories.map((c, i) => (
+              <option key={i} value={c} />
+            ))}
+          </datalist>
         </div>
 
         <div>

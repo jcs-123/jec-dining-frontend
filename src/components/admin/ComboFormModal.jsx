@@ -5,36 +5,21 @@ import { useToast } from '../../context/ToastContext';
 import { Plus, Trash2, Upload, Store, Database, Settings, Search, X } from 'lucide-react';
 
 const MEAL_CATEGORIES = [
-  { id: 'All', label: 'All Items', icon: '🌟', badgeClass: 'all' },
-  { id: 'Breakfast', label: 'Breakfast', icon: '🌅', badgeClass: 'breakfast', hint: 'Dosa (3), Idli (3), Vada (2), Poori (3)...' },
-  { id: 'Lunch', label: 'Lunch', icon: '🍛', badgeClass: 'lunch', hint: 'Thali Meals, Steamed Rice, Biryani, Curries...' },
-  { id: 'Tea', label: 'Tea & Snacks', icon: '☕', badgeClass: 'tea', hint: 'Filter Coffee, Tea, Samosa (2), Puffs...' },
-  { id: 'Dinner', label: 'Dinner', icon: '🌙', badgeClass: 'dinner', hint: 'Chapathi (3), Butter Naan, Fried Rice, Paneer...' }
+  { id: 'All', label: 'All Items', badgeClass: 'all' },
+  { id: 'Breakfast', label: 'Breakfast', badgeClass: 'breakfast' },
+  { id: 'Lunch', label: 'Lunch', badgeClass: 'lunch' },
+  { id: 'Tea', label: 'Tea & Snacks', badgeClass: 'tea' },
+  { id: 'Dinner', label: 'Dinner', badgeClass: 'dinner' }
 ];
 
-const detectMealCategory = (name) => {
-  const n = (name || '').toLowerCase();
-  if (/dosa|idli|vada|poori|puri|pongal|upma|puttu|appam|oats|poha|omelette/i.test(n)) return 'Breakfast';
-  if (/meals|thali|steamed rice|curd rice|sambar rice|lemon rice|biryani|chicken curry|fish curry|dal fry|lunch/i.test(n)) return 'Lunch';
-  if (/tea|chai|coffee|samosa|puff|cutlet|bajji|pakoda|vada pav|snack|cookie|biscuit|cake|roll|fries|nachos|churros|drink|juice|shake|mocktail/i.test(n)) return 'Tea';
-  if (/chapathi|chapati|phulka|roti|naan|paneer|manchurian|noodles|fried rice|gravy|kothu|dinner/i.test(n)) return 'Dinner';
-  return 'Breakfast';
-};
-
 const getItemCategory = (it) => {
-  if (it?.category && it.category !== 'General' && it.category !== 'Kitchen Essentials' && it.category !== 'Meal Component') {
-    return it.category;
-  }
-  return detectMealCategory(it?.name);
+  return it?.category || 'Breakfast';
 };
 
 const getItemDefaultQty = (it) => {
-  if (it?.defaultQty && it.defaultQty > 0) return it.defaultQty;
-  const n = (it?.name || '').toLowerCase();
-  if (/dosa|idli|poori|chapathi|chapati/i.test(n)) return 3;
-  if (/vada|samosa|naan|parotta/i.test(n)) return 2;
-  return 1;
+  return (it?.defaultQty && it.defaultQty > 0) ? it.defaultQty : 1;
 };
+
 
 export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, cafeName }) => {
   const [categoryId, setCategoryId] = useState('');
@@ -60,13 +45,21 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
   const [showManageItemsModal, setShowManageItemsModal] = useState(false);
   const [newItemName, setNewItemName] = useState('');
   const [newItemCategory, setNewItemCategory] = useState('Breakfast');
-  const [newItemQty, setNewItemQty] = useState(3);
+  const [newItemQty, setNewItemQty] = useState(1);
   const [newItemNotes, setNewItemNotes] = useState('');
-  const [newItemIsVeg, setNewItemIsVeg] = useState(true);
   const [savingNewItem, setSavingNewItem] = useState(false);
   const [deletingItemId, setDeletingItemId] = useState(null);
   const [itemsSearchFilter, setItemsSearchFilter] = useState('');
   const [activeRowIdx, setActiveRowIdx] = useState(null);
+
+  const openAddItemModal = (rowIdx = null) => {
+    setActiveRowIdx(rowIdx);
+    setNewItemCategory(selectedMealFilter !== 'All' ? selectedMealFilter : 'Breakfast');
+    setNewItemName('');
+    setNewItemQty(1);
+    setNewItemNotes('');
+    setShowAddItemModal(true);
+  };
 
   const toast = useToast();
 
@@ -227,9 +220,9 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
       setSavingNewItem(true);
       const res = await api.post('/items/admin', {
         name: trimmed,
-        category: newItemCategory,
+        category: newItemCategory || 'Breakfast',
         defaultQty: parseInt(newItemQty, 10) || 1,
-        isVeg: newItemIsVeg,
+        isVeg: true,
         defaultNotes: newItemNotes.trim()
       });
 
@@ -249,7 +242,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
         }
 
         setNewItemName('');
-        setNewItemQty(3);
+        setNewItemQty(1);
         setNewItemNotes('');
         setShowAddItemModal(false);
         setActiveRowIdx(null);
@@ -559,7 +552,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
               {/* Dropdown Catalog Management Buttons */}
               <button
                 type="button"
-                onClick={() => { setActiveRowIdx(null); setShowAddItemModal(true); }}
+                onClick={() => openAddItemModal()}
                 className="btn btn-outline btn-sm"
                 style={{
                   fontSize: '0.78rem',
@@ -648,9 +641,8 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
                   type="button"
                   className={`combo-meal-tag-pill ${selectedMealFilter === cat.id ? 'active' : ''}`}
                   onClick={() => setSelectedMealFilter(cat.id)}
-                  title={cat.hint || cat.label}
+                  title={cat.label}
                 >
-                  <span>{cat.icon}</span>
                   <span>{cat.label}</span>
                   <span style={{ opacity: 0.75, fontSize: '0.72rem', fontWeight: 800 }}>
                     ({count})
@@ -718,7 +710,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
                 const knownNames = new Set(dbItems.map(it => it.name.trim().toLowerCase()));
                 const isKnown = fi.name && knownNames.has(fi.name.trim().toLowerCase());
                 const currentItem = dbItems.find(it => it.name.trim().toLowerCase() === (fi.name || '').trim().toLowerCase());
-                const currentCat = currentItem ? getItemCategory(currentItem) : (fi.name ? detectMealCategory(fi.name) : null);
+                const currentCat = currentItem ? getItemCategory(currentItem) : null;
 
                 return (
                   <div key={fIdx} className="combo-builder-item-card">
@@ -759,8 +751,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
                             value={fi.name || ''}
                             onChange={(e) => {
                               if (e.target.value === '__add_new__') {
-                                setActiveRowIdx(fIdx);
-                                setShowAddItemModal(true);
+                                openAddItemModal(fIdx);
                               } else if (e.target.value === '__manage__') {
                                 setShowManageItemsModal(true);
                               } else {
@@ -772,7 +763,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
                             <option value="">-- Select Item (Grouped by Meal Tag) --</option>
 
                             {breakfastItems.length > 0 && (
-                              <optgroup label="🌅 Breakfast (Dosa, Idli, Vada, Poori...)">
+                              <optgroup label="Breakfast">
                                 {breakfastItems.map((it) => (
                                   <option key={it._id || it.name} value={it.name}>
                                     {it.name} {getItemDefaultQty(it) > 1 ? `(Portion: ${getItemDefaultQty(it)})` : ''}
@@ -782,7 +773,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
                             )}
 
                             {lunchItems.length > 0 && (
-                              <optgroup label="🍛 Lunch (Thali Meals, Rice, Biryani, Curries...)">
+                              <optgroup label="Lunch">
                                 {lunchItems.map((it) => (
                                   <option key={it._id || it.name} value={it.name}>
                                     {it.name} {getItemDefaultQty(it) > 1 ? `(Portion: ${getItemDefaultQty(it)})` : ''}
@@ -792,7 +783,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
                             )}
 
                             {teaItems.length > 0 && (
-                              <optgroup label="☕ Tea & Snacks (Coffee, Tea, Samosa, Puffs...)">
+                              <optgroup label="Tea & Snacks">
                                 {teaItems.map((it) => (
                                   <option key={it._id || it.name} value={it.name}>
                                     {it.name} {getItemDefaultQty(it) > 1 ? `(Portion: ${getItemDefaultQty(it)})` : ''}
@@ -802,7 +793,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
                             )}
 
                             {dinnerItems.length > 0 && (
-                              <optgroup label="🌙 Dinner (Chapathi, Naan, Fried Rice, Paneer...)">
+                              <optgroup label="Dinner">
                                 {dinnerItems.map((it) => (
                                   <option key={it._id || it.name} value={it.name}>
                                     {it.name} {getItemDefaultQty(it) > 1 ? `(Portion: ${getItemDefaultQty(it)})` : ''}
@@ -812,7 +803,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
                             )}
 
                             {otherItems.length > 0 && (
-                              <optgroup label="🍽️ General Items">
+                              <optgroup label="General Items">
                                 {otherItems.map((it) => (
                                   <option key={it._id || it.name} value={it.name}>
                                     {it.name}
@@ -974,46 +965,27 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
         }
       >
         <form onSubmit={handleAddNewItemToCatalog} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {/* STEP 1: Select Meal Type Tag First */}
           <div>
-            <label className="form-label">Item Name *</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="e.g. Dosa, Idli, Medu Vada, Paneer Butter Masala..."
-              value={newItemName}
-              onChange={(e) => {
-                const val = e.target.value;
-                setNewItemName(val);
-                const detected = detectMealCategory(val);
-                if (detected) setNewItemCategory(detected);
-              }}
-              autoFocus
-              required
-            />
-          </div>
-
-          <div>
-            <label className="form-label">Meal Type Tag *</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '4px' }}>
+            <label className="form-label" style={{ fontWeight: 800, color: '#2D1A10', marginBottom: '6px' }}>
+              1. Select Meal Tag *
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
               {[
-                { id: 'Breakfast', label: '🌅 Breakfast', hint: 'Morning (Dosa, Idli, Vada, Poori)' },
-                { id: 'Lunch', label: '🍛 Lunch', hint: 'Afternoon (Thali, Rice, Biryani)' },
-                { id: 'Tea', label: '☕ Tea & Snacks', hint: 'Evening (Coffee, Tea, Samosa, Puffs)' },
-                { id: 'Dinner', label: '🌙 Dinner', hint: 'Night (Chapathi, Naan, Paneer)' }
+                { id: 'Breakfast', label: 'Breakfast', hint: 'Morning' },
+                { id: 'Lunch', label: 'Lunch', hint: 'Afternoon' },
+                { id: 'Tea', label: 'Tea & Snacks', hint: 'Evening' },
+                { id: 'Dinner', label: 'Dinner', hint: 'Night' }
               ].map(m => (
                 <button
                   key={m.id}
                   type="button"
-                  onClick={() => {
-                    setNewItemCategory(m.id);
-                    if (m.id === 'Breakfast' && newItemQty === 1) setNewItemQty(3);
-                    if (m.id === 'Dinner' && newItemQty === 1) setNewItemQty(3);
-                  }}
+                  onClick={() => setNewItemCategory(m.id)}
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'flex-start',
-                    padding: '8px 10px',
+                    padding: '9px 12px',
                     borderRadius: '10px',
                     border: newItemCategory === m.id ? '2px solid #C25E30' : '1px solid #E2D3C4',
                     background: newItemCategory === m.id ? '#FDF5EE' : '#FFFFFF',
@@ -1022,7 +994,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
                     transition: 'all 0.15s ease'
                   }}
                 >
-                  <span style={{ fontSize: '0.84rem', fontWeight: 700, color: newItemCategory === m.id ? '#C25E30' : '#2D1A10' }}>
+                  <span style={{ fontSize: '0.86rem', fontWeight: 700, color: newItemCategory === m.id ? '#C25E30' : '#2D1A10' }}>
                     {m.label}
                   </span>
                   <span style={{ fontSize: '0.68rem', color: '#8A7E74' }}>{m.hint}</span>
@@ -1031,33 +1003,37 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
             </div>
           </div>
 
-          <div className="modal-form-grid-2">
-            <div>
-              <label className="form-label">Default Portion / Qty</label>
-              <input
-                type="number"
-                min="1"
-                className="form-input"
-                value={newItemQty}
-                onChange={(e) => setNewItemQty(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                placeholder="e.g. 3 for Dosa or Idli"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="form-label">Dietary Preference</label>
-              <select
-                className="form-select"
-                value={newItemIsVeg ? 'veg' : 'nonveg'}
-                onChange={(e) => setNewItemIsVeg(e.target.value === 'veg')}
-              >
-                <option value="veg">Vegetarian (Pure Veg)</option>
-                <option value="nonveg">Non-Vegetarian</option>
-              </select>
-            </div>
+          {/* STEP 2: Item Name inside Selected Tag */}
+          <div>
+            <label className="form-label" style={{ fontWeight: 800, color: '#2D1A10', marginBottom: '6px' }}>
+              2. Item Name inside {newItemCategory} *
+            </label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder={`Enter item name for ${newItemCategory} (e.g. Chapathi, Dosa, Idli...)`}
+              value={newItemName}
+              onChange={(e) => setNewItemName(e.target.value)}
+              autoFocus
+              required
+            />
           </div>
 
+          {/* STEP 3: Portion / Qty */}
+          <div>
+            <label className="form-label">Default Portion / Qty</label>
+            <input
+              type="number"
+              min="1"
+              className="form-input"
+              value={newItemQty}
+              onChange={(e) => setNewItemQty(Math.max(1, parseInt(e.target.value, 10) || 1))}
+              placeholder="e.g. 1"
+              required
+            />
+          </div>
+
+          {/* Optional Notes */}
           <div>
             <label className="form-label">Default Prep Notes (Optional)</label>
             <input
@@ -1070,7 +1046,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
           </div>
 
           <div style={{ fontSize: '0.78rem', color: '#7A6E63', background: '#FAF6EE', padding: '8px 12px', borderRadius: '8px', border: '1px solid #EADBCC' }}>
-            💡 This item will be tagged under <strong>{newItemCategory}</strong> with a default portion of <strong>{newItemQty}</strong>.
+            💡 This item will be saved strictly under <strong>{newItemCategory}</strong> with portion <strong>{newItemQty}</strong>.
           </div>
         </form>
       </Modal>
@@ -1108,7 +1084,6 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
                 style={{ fontSize: '0.72rem', padding: '4px 10px' }}
                 onClick={() => setManageCategoryFilter(cat.id)}
               >
-                <span>{cat.icon}</span>
                 <span>{cat.label}</span>
               </button>
             ))}
@@ -1206,7 +1181,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
 
           <button
             type="button"
-            onClick={() => { setShowManageItemsModal(false); setShowAddItemModal(true); }}
+            onClick={() => { setShowManageItemsModal(false); openAddItemModal(); }}
             className="combo-add-more-btn"
             style={{ width: '100%', justifyContent: 'center' }}
           >
