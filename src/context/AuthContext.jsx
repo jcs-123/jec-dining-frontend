@@ -62,6 +62,7 @@ export const AuthProvider = ({ children }) => {
         : { identifier: identifierOrEmail, password };
       const res = await api.post('/auth/login', payload);
       if (res.success) {
+        if (res.token) localStorage.setItem('token', res.token);
         setUser(res.user);
         toast.success(`Welcome back, ${res.user.name}!`);
         return res.user;
@@ -85,6 +86,7 @@ export const AuthProvider = ({ children }) => {
         cafeName
       });
       if (res.success) {
+        if (res.token) localStorage.setItem('token', res.token);
         setUser(res.user);
         toast.success('Registration successful! Welcome to JEC Dining.');
         return res.user;
@@ -113,6 +115,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await api.post('/auth/admin/login', { email, password, cafeSlug });
       if (res.success) {
+        if (res.token) localStorage.setItem('token', res.token);
         setUser(res.user);
         toast.success(res.message || 'Admin login successful');
         return res.user;
@@ -127,6 +130,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await api.post('/auth/super-admin/login', { identifier, password });
       if (res.success) {
+        if (res.token) localStorage.setItem('token', res.token);
         setUser(res.user);
         toast.success(res.message || 'Super Admin login successful');
         return res.user;
@@ -148,6 +152,8 @@ export const AuthProvider = ({ children }) => {
     } catch {
       // ignore
     } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('jec_auth_user');
       setUser(null);
       toast.info('You have been logged out.');
       if (redirectUrl) {

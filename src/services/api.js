@@ -19,7 +19,19 @@ async function request(endpoint, options = {}) {
     delete headers['Content-Type'];
   }
 
-  // Attach CSRF token
+  // Attach token from localStorage if present
+  const localToken = localStorage.getItem('token');
+  if (localToken && !headers['Authorization']) {
+    headers['Authorization'] = `Bearer ${localToken}`;
+  }
+
+  // Attach cafe slug for proper server scoping
+  if (!headers['X-Cafe-Slug']) {
+    const isBytes = window.location.pathname.toLowerCase().includes('byte') || localStorage.getItem('selectedCafe') === 'jecbytes';
+    headers['X-Cafe-Slug'] = isBytes ? 'jecbytes' : 'jeccafe';
+  }
+
+  // Attach CSRF token if present
   const csrfToken = getCookie('XSRF-TOKEN');
   if (csrfToken) {
     headers['X-XSRF-TOKEN'] = csrfToken;
