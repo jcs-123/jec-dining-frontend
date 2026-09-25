@@ -1069,7 +1069,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
               })}
             {dbItems.filter(it => it.name.toLowerCase().includes(itemsSearchFilter.toLowerCase())).length === 0 && (
               <div style={{ textAlign: 'center', padding: '1.5rem', color: '#8A7E74', fontSize: '0.85rem' }}>
-                {itemsSearchFilter ? 'No matching items found for this search.' : 'No items in catalog yet.'}
+                {itemsSearchFilter ? `No matching items found for "${itemsSearchFilter}".` : 'No items in catalog yet.'}
               </div>
             )}
           </div>
