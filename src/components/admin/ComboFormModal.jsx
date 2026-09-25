@@ -87,6 +87,19 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
     }
   };
 
+  const handleClearForm = () => {
+    setCategoryId('');
+    setName('');
+    setDescription('');
+    setImage('');
+    setIsVeg(true);
+    setBasePriceRupees('');
+    setFixedItems([]);
+    setDisplayOrder(0);
+    setSelectedMealFilter('All');
+    toast.info('Form cleared');
+  };
+
   useEffect(() => {
     if (combo) {
       setCategoryId(combo.categoryId?._id || combo.categoryId || '');
@@ -98,14 +111,16 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
       setFixedItems(combo.fixedItems || []);
       setDisplayOrder(combo.displayOrder || 0);
     } else {
-      setCategoryId(categories.length > 0 ? categories[0]._id : '');
+      // Clean blank form with no pre-filled image, category, price, or items
+      setCategoryId('');
       setName('');
       setDescription('');
-      setImage('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80');
+      setImage('');
       setIsVeg(true);
-      setBasePriceRupees('199');
+      setBasePriceRupees('');
       setFixedItems([]);
       setDisplayOrder(0);
+      setSelectedMealFilter('All');
     }
   }, [combo, categories, isOpen]);
 
@@ -336,16 +351,27 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
       title={modalTitle}
       maxWidth="720px"
       footer={
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '10px', width: '100%', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', width: '100%', flexWrap: 'wrap' }}>
           <button
             type="button"
             className="btn btn-outline"
-            onClick={onClose}
+            onClick={handleClearForm}
             disabled={loading}
-            style={{ minWidth: '95px', borderRadius: '10px', fontWeight: 700 }}
+            style={{ borderRadius: '10px', fontWeight: 700, color: '#8C7E74', borderColor: '#E2D3C4' }}
+            title="Reset and clear all form inputs"
           >
-            Cancel
+            Clear Form
           </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={onClose}
+              disabled={loading}
+              style={{ minWidth: '95px', borderRadius: '10px', fontWeight: 700 }}
+            >
+              Cancel
+            </button>
           <button
             type="button"
             className="btn btn-primary"
@@ -362,6 +388,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
           >
             {loading ? 'Saving...' : 'Save Combo'}
           </button>
+          </div>
         </div>
       }
     >
