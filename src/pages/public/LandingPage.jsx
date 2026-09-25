@@ -1291,7 +1291,7 @@ export const LandingPage = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {/* Desktop Only Auth Display (hidden on screens <= 960px) */}
           <div className="header-desktop-auth">
-            {isAuthenticated ? (
+            {isAuthenticated && user?.role === 'customer' ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <button
                   onClick={() => navigate('/my-orders')}
@@ -1417,7 +1417,7 @@ export const LandingPage = () => {
 
           {/* Sign In / Login set INSIDE Toggler for Mobile Screens */}
           <div style={{ paddingTop: '0.85rem', marginTop: '0.6rem', borderTop: '1.5px solid #EADBCC' }}>
-            {isAuthenticated ? (
+            {isAuthenticated && user?.role === 'customer' ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{
                   display: 'flex',
@@ -2913,15 +2913,6 @@ export const LandingPage = () => {
                 >
                   Support
                 </button>
-              </li>
-              <li>
-                <Link
-                  to="/admin/login"
-                  className="footer-nav-link"
-                  style={{ color: '#8B5838', fontWeight: 700 }}
-                >
-                  Admin / Manager Login →
-                </Link>
               </li>
             </ul>
           </div>

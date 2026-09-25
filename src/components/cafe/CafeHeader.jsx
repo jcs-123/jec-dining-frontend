@@ -297,7 +297,7 @@ export const CafeHeader = ({ cafe }) => {
               </button>
 
               {/* User Profile / Auth */}
-              {user ? (
+              {user && isCustomer ? (
                 <div style={{ position: 'relative' }}>
                   <button
                     onClick={() => setShowUserDropdown(!showUserDropdown)}
@@ -941,7 +941,7 @@ export const CafeHeader = ({ cafe }) => {
                 border: '1.5px solid #EADBCC',
                 boxShadow: '0 4px 14px rgba(50, 30, 15, 0.04)'
               }}>
-                {user ? (
+                {user && isCustomer ? (
                   <>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <div style={{

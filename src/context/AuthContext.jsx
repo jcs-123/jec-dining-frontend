@@ -7,6 +7,11 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        localStorage.removeItem('jec_auth_user');
+        return null;
+      }
       const saved = localStorage.getItem('jec_auth_user');
       return saved ? JSON.parse(saved) : null;
     } catch {
@@ -15,14 +20,23 @@ export const AuthProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(() => {
     try {
-      return !localStorage.getItem('jec_auth_user');
+      const token = localStorage.getItem('token');
+      return !!token && !localStorage.getItem('jec_auth_user');
     } catch {
-      return true;
+      return false;
     }
   });
   const toast = useToast();
 
   const fetchCurrentUser = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setUser(null);
+      localStorage.removeItem('jec_auth_user');
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await api.get('/auth/me');
       if (res.success && res.user) {
@@ -31,13 +45,12 @@ export const AuthProvider = ({ children }) => {
       } else {
         setUser(null);
         localStorage.removeItem('jec_auth_user');
+        localStorage.removeItem('token');
       }
     } catch {
-      // If network fails or unauthenticated
-      if (!localStorage.getItem('token')) {
-        setUser(null);
-        localStorage.removeItem('jec_auth_user');
-      }
+      setUser(null);
+      localStorage.removeItem('jec_auth_user');
+      localStorage.removeItem('token');
     } finally {
       setLoading(false);
     }
