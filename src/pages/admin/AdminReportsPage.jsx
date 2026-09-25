@@ -797,12 +797,37 @@ export const AdminReportsPage = () => {
                         boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: cs.fixedItems?.length ? '6px' : '0' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span className={`badge ${cs.isVeg ? 'badge-veg' : 'badge-nonveg'}`} style={{ fontSize: '0.68rem', padding: '1px 6px' }}>
-                            {cs.isVeg ? 'Veg' : 'Non-Veg'}
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '10px',
+                          flexWrap: 'wrap',
+                          marginBottom: cs.fixedItems?.length ? '8px' : '0'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '0', flex: '1 1 180px' }}>
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              background: cs.isVeg ? '#DCFCE7' : '#FEE2E2',
+                              color: cs.isVeg ? '#16A34A' : '#DC2626',
+                              border: `1px solid ${cs.isVeg ? '#86EFAC' : '#FCA5A5'}`,
+                              fontSize: '0.68rem',
+                              fontWeight: 800,
+                              padding: '2px 8px',
+                              borderRadius: '12px',
+                              whiteSpace: 'nowrap',
+                              flexShrink: 0
+                            }}
+                          >
+                            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: cs.isVeg ? '#16A34A' : '#DC2626' }} />
+                            {cs.isVeg ? 'VEG' : 'NON-VEG'}
                           </span>
-                          <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#1E140E' }}>
+                          <span style={{ fontWeight: 800, fontSize: '0.92rem', color: '#1E140E', lineHeight: 1.3 }}>
                             {cs.name}
                           </span>
                         </div>
@@ -812,36 +837,54 @@ export const AdminReportsPage = () => {
                             color: '#15803D',
                             border: '1px solid #86EFAC',
                             fontWeight: 800,
-                            fontSize: '0.82rem',
-                            padding: '3px 10px',
+                            fontSize: '0.8rem',
+                            padding: '4px 10px',
                             borderRadius: '12px',
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '4px'
+                            gap: '4px',
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0,
+                            marginLeft: 'auto'
                           }}
                         >
-                          <CheckCircle2 size={12} />
+                          <CheckCircle2 size={13} />
                           <span>{cs.demandCount} combo{cs.demandCount > 1 ? 's' : ''}</span>
                         </span>
                       </div>
 
-                      {/* Included Items Breakdown (e.g. 2x Chapathi, 2x Parotta multiplied by combo count) */}
+                      {/* Included Items Breakdown */}
                       {cs.fixedItems && cs.fixedItems.length > 0 && (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', paddingTop: '4px', borderTop: '1px dashed #F0E6DA' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '6px',
+                            paddingTop: '8px',
+                            borderTop: '1px dashed #F0E6DA'
+                          }}
+                        >
                           {cs.fixedItems.map((fi, i) => (
                             <span
                               key={i}
                               style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
                                 background: '#FFF7ED',
                                 border: '1px solid #FED7AA',
                                 color: '#9A3412',
-                                fontSize: '0.72rem',
+                                fontSize: '0.74rem',
                                 fontWeight: 700,
-                                padding: '2px 7px',
-                                borderRadius: '6px'
+                                padding: '3px 8px',
+                                borderRadius: '8px',
+                                whiteSpace: 'nowrap'
                               }}
                             >
-                              {(fi.quantity || 1) * cs.demandCount}x {fi.name}
+                              <span style={{ fontWeight: 800, color: '#EA580C' }}>
+                                {(fi.quantity || 1) * cs.demandCount}x
+                              </span>
+                              <span>{fi.name}</span>
                             </span>
                           ))}
                         </div>
