@@ -239,6 +239,10 @@ export const AdminLoginPage = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@example.com"
                 required
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck="false"
                 style={{
                   width: '100%',
                   border: 'none',
@@ -289,6 +293,7 @@ export const AdminLoginPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter admin password"
                 required
+                autoComplete="new-password"
                 style={{
                   width: '100%',
                   border: 'none',

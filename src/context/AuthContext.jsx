@@ -152,18 +152,38 @@ export const AuthProvider = ({ children }) => {
     } catch {
       // ignore
     } finally {
-      localStorage.removeItem('token');
-      localStorage.removeItem('jec_auth_user');
+      // Clear ALL localStorage items (tokens, cached users, cart, session, emails)
+      try {
+        localStorage.clear();
+      } catch (e) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('jec_auth_user');
+      }
+
+      // Clear ALL sessionStorage items
+      try {
+        sessionStorage.clear();
+      } catch (e) {}
+
+      // Clear all document cookies accessible from frontend
+      try {
+        document.cookie.split(";").forEach((cookie) => {
+          const eqPos = cookie.indexOf("=");
+          const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;`;
+        });
+      } catch (e) {}
+
       setUser(null);
-      toast.info('You have been logged out.');
+      toast.info('Signed out. All local storage, session, and credentials cleared.');
       if (redirectUrl) {
         window.location.href = redirectUrl;
       } else if (wasSuperAdmin) {
         window.location.href = '/super-admin/login';
       } else if (wasAdmin) {
         window.location.href = `/${adminLoginSlug}/admin/login`;
-      } else if (window.location.pathname !== '/') {
-        window.location.href = '/';
+      } else {
+        window.location.href = '/auth';
       }
     }
   };

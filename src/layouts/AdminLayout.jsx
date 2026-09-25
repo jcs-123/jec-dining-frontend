@@ -19,7 +19,7 @@ export const AdminLayout = () => {
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   const rawSlug = (cafeSlug || '').toLowerCase();
-  const normalizedSlug = rawSlug.includes('byte') ? 'jecbytes' : (rawSlug.includes('cafe') ? 'jeccafe' : rawSlug);
+  const normalizedSlug = rawSlug.includes('byte') ? 'jecbytes' : 'jeccafe';
   const isJeccafe = normalizedSlug === 'jeccafe';
   const cafeName = user?.cafe?.name || (isJeccafe ? 'JECCAFE' : 'JEC BYTES');
 

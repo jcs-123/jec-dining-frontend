@@ -3310,6 +3310,10 @@ export const LandingPage = () => {
                     onChange={(e) => setLoginEmail(e.target.value)}
                     placeholder="Enter your username or email"
                     required
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="none"
+                    spellCheck="false"
                     style={{
                       width: '100%',
                       border: 'none',
@@ -3397,6 +3401,7 @@ export const LandingPage = () => {
                     onChange={(e) => setLoginPassword(e.target.value)}
                     placeholder="Enter your password"
                     required
+                    autoComplete="new-password"
                     style={{
                       width: '100%',
                       border: 'none',

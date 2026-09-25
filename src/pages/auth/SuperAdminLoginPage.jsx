@@ -176,6 +176,10 @@ export const SuperAdminLoginPage = () => {
                 onChange={(e) => setIdentifier(e.target.value)}
                 placeholder="superadmin@jecc.ac.in"
                 required
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck="false"
                 style={{
                   width: '100%',
                   padding: '12px 14px 12px 42px',
@@ -231,6 +235,7 @@ export const SuperAdminLoginPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter super admin password"
                 required
+                autoComplete="new-password"
                 style={{
                   width: '100%',
                   padding: '12px 42px 12px 42px',

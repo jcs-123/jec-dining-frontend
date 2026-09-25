@@ -299,139 +299,72 @@ export const CustomerAuthPage = () => {
           <span>← BACK TO DINING HOME</span>
         </Link>
 
-        {/* ALREADY LOGGED IN VIEW */}
-        {isAuthenticated && user?.role === 'customer' ? (
-          <div>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              background: '#F2FAF3',
-              border: '1.2px solid #C5E6CE',
-              padding: '4px 12px',
-              borderRadius: '20px',
-              fontSize: '0.72rem',
-              fontWeight: 800,
-              color: '#1B6A35',
-              marginBottom: '1rem'
-            }}>
-              <CheckCircle2 size={13} />
-              <span>ACTIVE CUSTOMER SESSION</span>
-            </div>
-
-            <h1
-              style={{
-                fontFamily: "'Fraunces', Georgia, serif",
-                fontSize: '1.85rem',
-                fontWeight: 800,
-                color: '#1A1816',
-                margin: '0 0 0.45rem',
-                lineHeight: 1.2
-              }}
-            >
-              Welcome, {user.name}
-            </h1>
-            <p style={{ color: '#6E6258', fontSize: '0.88rem', marginBottom: '1.5rem', lineHeight: 1.55 }}>
-              Your campus dining profile is active. You can change your preferred café below.
-            </p>
-
-            {/* Profile Card */}
-            <div style={{
-              background: '#FFFFFF',
-              border: '1.5px solid #E8DDD0',
-              borderRadius: '18px',
-              padding: '1.25rem',
-              marginBottom: '1.5rem',
+        {/* NON-BLOCKING ACTIVE SESSION BANNER */}
+        {isAuthenticated && user && (
+          <div
+            style={{
+              background: '#FDF1EB',
+              border: '1.2px solid #F0DAC9',
+              borderRadius: '16px',
+              padding: '12px 14px',
+              marginBottom: '1.25rem',
               display: 'flex',
-              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
               gap: '10px'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F4EDE4', paddingBottom: '8px' }}>
-                <span style={{ fontSize: '0.82rem', color: '#8A7A6E', fontWeight: 600 }}>Admission Number:</span>
-                <strong style={{ fontSize: '0.88rem', color: '#1A1816' }}>{user.admissionNumber || 'Not provided'}</strong>
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#8B4822', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                Active Session
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F4EDE4', paddingBottom: '8px' }}>
-                <span style={{ fontSize: '0.82rem', color: '#8A7A6E', fontWeight: 600 }}>Username:</span>
-                <strong style={{ fontSize: '0.88rem', color: '#1A1816' }}>@{user.username || user.email?.split('@')[0]}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F4EDE4', paddingBottom: '8px' }}>
-                <span style={{ fontSize: '0.82rem', color: '#8A7A6E', fontWeight: 600 }}>Mail ID:</span>
-                <strong style={{ fontSize: '0.88rem', color: '#1A1816' }}>{user.email}</strong>
-              </div>
-
-              {/* Cafe Selection Name-Wise */}
-              <div style={{ paddingTop: '4px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 700, color: '#1A1816', marginBottom: '6px' }}>
-                  <Store size={15} color="#9C5B32" />
-                  <span>Preferred Campus Café (Change Name-Wise):</span>
-                </label>
-                <select
-                  className="form-select"
-                  value={user.cafe?.name || 'JECCAFE'}
-                  onChange={(e) => handleCafeChange(e.target.value)}
-                  disabled={switchingCafe}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: '12px',
-                    border: '1.5px solid #D8C8B8',
-                    fontWeight: 700,
-                    color: '#1A1816',
-                    background: '#FAF5ED'
-                  }}
-                >
-                  {cafes.map((c) => (
-                    <option key={c.slug} value={c.name}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+              <div style={{ fontSize: '0.86rem', fontWeight: 700, color: '#1A1816' }}>
+                {user.name} <span style={{ fontWeight: 400, color: '#6E6258', fontSize: '0.8rem' }}>({user.email || user.username})</span>
               </div>
             </div>
-
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button
                 type="button"
-                onClick={() => navigate(user.cafe?.slug ? `/${user.cafe.slug}` : '/')}
+                onClick={() => navigate(user.cafe?.slug ? `/${user.cafe.slug}` : redirectPath)}
                 style={{
-                  flex: 2,
-                  padding: '12px',
                   background: 'linear-gradient(135deg, #3A1F12 0%, #1A0F09 100%)',
                   color: '#FFFFFF',
                   border: 'none',
-                  borderRadius: '14px',
+                  borderRadius: '10px',
+                  padding: '7px 12px',
+                  fontSize: '0.78rem',
                   fontWeight: 700,
-                  fontSize: '0.92rem',
                   cursor: 'pointer'
                 }}
               >
-                Go to {user.cafe?.name || 'Dining Menu'} →
+                Go to Menu →
               </button>
               <button
                 type="button"
-                onClick={logout}
+                onClick={() => logout('/auth')}
                 style={{
-                  flex: 1,
-                  padding: '12px',
                   background: '#FFFFFF',
                   border: '1.5px solid #E8DDD0',
                   color: '#8B4822',
-                  borderRadius: '14px',
+                  borderRadius: '10px',
+                  padding: '6px 12px',
+                  fontSize: '0.78rem',
                   fontWeight: 700,
-                  fontSize: '0.85rem',
                   cursor: 'pointer',
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px'
+                  gap: '4px'
                 }}
               >
-                <LogOut size={15} />
-                <span>Sign Out</span>
+                <LogOut size={13} />
+                <span>Sign Out & Clear</span>
               </button>
             </div>
           </div>
-        ) : mode === 'forgot' ? (
+        )}
+
+        {mode === 'forgot' ? (
           /* FORGOT PASSWORD VIEW - 3 STEPS */
           <div>
             <div
@@ -1027,8 +960,12 @@ export const CustomerAuthPage = () => {
                     type="text"
                     value={loginIdentifier}
                     onChange={(e) => setLoginIdentifier(e.target.value)}
-                    placeholder="Enter your username"
+                    placeholder="Enter username or campus email"
                     required
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="none"
+                    spellCheck="false"
                     style={{
                       width: '100%',
                       border: 'none',
@@ -1106,6 +1043,7 @@ export const CustomerAuthPage = () => {
                     onChange={(e) => setLoginPassword(e.target.value)}
                     placeholder="Enter your password"
                     required
+                    autoComplete="new-password"
                     style={{
                       width: '100%',
                       border: 'none',

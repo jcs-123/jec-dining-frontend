@@ -55,9 +55,18 @@ export function App() {
                 <Route path="/auth" element={<CustomerAuthPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-                {/* 2. Admin Login Routes */}
+                {/* 2. Admin Login & Logout Routes */}
+                <Route path="/admin/login" element={<AdminLoginPage />} />
+                <Route path="/admin" element={<Navigate to="/jeccafe/admin/login" replace />} />
+                <Route path="/admin/logout" element={<Navigate to="/jeccafe/admin/login" replace />} />
+                <Route path="/admin/admin/login" element={<Navigate to="/jeccafe/admin/login" replace />} />
                 <Route path="/jeccafe/admin/login" element={<AdminLoginPage />} />
                 <Route path="/jecbytes/admin/login" element={<AdminLoginPage />} />
+                <Route path="/jeccafe/admin/logout" element={<Navigate to="/jeccafe/admin/login" replace />} />
+                <Route path="/jecbytes/admin/logout" element={<Navigate to="/jecbytes/admin/login" replace />} />
+                <Route path="/:cafeSlug/admin/login" element={<AdminLoginPage />} />
+                <Route path="/:cafeSlug/admin/logout" element={<Navigate to="/jeccafe/admin/login" replace />} />
+                <Route path="/logout" element={<Navigate to="/auth" replace />} />
 
                 {/* 3. Super Admin Governance Routes */}
                 <Route path="/super-admin/login" element={<SuperAdminLoginPage />} />
