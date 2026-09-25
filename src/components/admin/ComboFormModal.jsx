@@ -116,7 +116,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
       setUploadingImage(true);
       const res = await api.post('/combos/admin/upload-image', formData);
       if (res.imageUrl) {
-        setImage(`http://localhost:5000${res.imageUrl}`);
+        setImage(`https://jec-dining-backend.onrender.com${res.imageUrl}`);
         toast.success('Image uploaded successfully');
       }
     } catch (err) {

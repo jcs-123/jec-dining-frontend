@@ -46,7 +46,7 @@ export const OrderDetailPage = () => {
   };
 
   const handlePrintReceipt = () => {
-    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const apiBase = import.meta.env.VITE_API_URL || 'https://jec-dining-backend.onrender.com/api';
     window.open(`${apiBase}/orders/${orderId}/receipt`, '_blank');
   };
 

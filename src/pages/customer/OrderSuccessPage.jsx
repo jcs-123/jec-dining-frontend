@@ -82,7 +82,7 @@ export const OrderSuccessPage = () => {
 
     try {
       setDownloading(true);
-      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const apiBase = import.meta.env.VITE_API_URL || 'https://jec-dining-backend.onrender.com/api';
       const token = localStorage.getItem('token') || '';
 
       const url = token
