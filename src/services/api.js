@@ -25,12 +25,6 @@ async function request(endpoint, options = {}) {
     headers['Authorization'] = `Bearer ${localToken}`;
   }
 
-  // Attach cafe slug for proper server scoping
-  if (!headers['X-Cafe-Slug']) {
-    const isBytes = window.location.pathname.toLowerCase().includes('byte') || localStorage.getItem('selectedCafe') === 'jecbytes';
-    headers['X-Cafe-Slug'] = isBytes ? 'jecbytes' : 'jeccafe';
-  }
-
   // Attach CSRF token if present
   const csrfToken = getCookie('XSRF-TOKEN');
   if (csrfToken) {
