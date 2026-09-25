@@ -2809,28 +2809,35 @@
   gap: 10px;
 }
 
-/* Card layout on desktop: clean 4-column row */
+/* Card layout: clean, spacious, responsive 2-row card */
 .combo-builder-item-card {
   background: #FFFFFF;
   border: 1.5px solid #EADBCC;
   border-radius: 12px;
-  padding: 8px 12px;
-  display: grid;
-  grid-template-columns: minmax(180px, 1fr) auto minmax(130px, 1fr) auto;
-  align-items: center;
-  gap: 10px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   box-shadow: 0 2px 6px rgba(26, 14, 8, 0.03);
   transition: border-color 0.15s ease;
   box-sizing: border-box;
+  width: 100%;
 }
 
 .combo-builder-item-card:hover {
   border-color: #D66C3E;
 }
 
-.combo-item-name-wrap {
-  min-width: 0;
+.combo-builder-item-main-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: 100%;
+}
+
+.combo-item-name-wrap {
+  flex: 1 1 200px;
+  min-width: 0;
 }
 
 .combo-item-select {
@@ -2841,7 +2848,7 @@
   padding-left: 12px !important;
   padding-right: 32px !important;
   border-radius: 10px !important;
-  font-size: 0.9rem !important;
+  font-size: 0.88rem !important;
   font-weight: 600 !important;
   border: 1.5px solid #EADBCC !important;
   background-color: #FAF8F5 !important;
@@ -2890,18 +2897,18 @@
   background: #FAF7F2;
   border: 1.5px solid #EADBCC;
   border-radius: 10px;
-  padding: 2px 6px;
+  padding: 3px 6px;
   flex-shrink: 0;
   height: 42px;
   box-sizing: border-box;
 }
 
 .combo-qty-btn {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border: 1px solid #EADBCC;
   background: #FFFFFF;
-  border-radius: 7px;
+  border-radius: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2921,7 +2928,7 @@
 }
 
 .combo-qty-input {
-  width: 36px;
+  width: 32px;
   border: none;
   background: transparent;
   font-size: 0.95rem;
@@ -2934,16 +2941,24 @@
 }
 
 .combo-item-notes-wrap {
-  min-width: 0;
   width: 100%;
 }
 
-.combo-item-notes-wrap input {
-  height: 42px !important;
-  border-radius: 10px !important;
+.combo-item-notes-input {
+  height: 38px !important;
+  border-radius: 8px !important;
   padding: 0 12px !important;
-  font-size: 0.85rem !important;
+  font-size: 0.82rem !important;
+  background-color: #FCFBF9 !important;
+  border: 1px solid #EADBCC !important;
+  width: 100% !important;
   box-sizing: border-box !important;
+  transition: all 0.15s ease;
+}
+
+.combo-item-notes-input:focus {
+  background-color: #FFFFFF !important;
+  border-color: #C25E30 !important;
 }
 
 .combo-item-delete-btn {
@@ -3000,39 +3015,23 @@
 }
 
 /* Mobile responsive layout for Combo Builder */
-@media (max-width: 768px) {
-  .combo-builder-box {
-    padding: 12px;
-    gap: 10px;
-  }
-
-  .combo-builder-item-card {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-areas:
-      "name delete"
-      "qty notes";
+@media (max-width: 580px) {
+  .combo-builder-item-main-row {
+    flex-wrap: wrap;
     gap: 8px;
-    padding: 10px;
   }
 
   .combo-item-name-wrap {
-    grid-area: name;
-    width: 100%;
-    min-width: 0;
+    width: calc(100% - 50px);
+    flex: 1 1 auto;
   }
 
   .combo-item-delete-btn {
-    grid-area: delete;
+    order: 2;
   }
 
   .combo-item-qty-wrap {
-    grid-area: qty;
-  }
-
-  .combo-item-notes-wrap {
-    grid-area: notes;
-    width: 100%;
-    min-width: 0;
+    order: 3;
+    width: auto;
   }
 }

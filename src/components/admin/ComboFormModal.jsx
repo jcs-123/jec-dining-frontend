@@ -116,7 +116,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
       setUploadingImage(true);
       const res = await api.post('/combos/admin/upload-image', formData);
       if (res.imageUrl) {
-        setImage(`https://jec-dining-backend.onrender.com${res.imageUrl}`);
+        setImage(`http://localhost:5000${res.imageUrl}`);
         toast.success('Image uploaded successfully');
       }
     } catch (err) {
@@ -649,172 +649,154 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
 
                 return (
                   <div key={fIdx} className="combo-builder-item-card">
-                    {/* Item Dropdown / Custom Name */}
-                    <div className="combo-item-name-wrap">
-                      {fi.isCustom ? (
-                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', width: '100%' }}>
-                          <input
-                            type="text"
-                            className="form-input"
-                            placeholder="Type custom item name..."
-                            value={fi.name}
-                            onChange={(e) => updateFixedItem(fIdx, 'name', e.target.value)}
-                            style={{
-                              height: '42px',
-                              fontSize: '0.88rem',
-                              fontWeight: 700,
-                              borderRadius: '10px',
-                              borderColor: '#E2D3C4',
-                              flex: 1
-                            }}
-                            autoFocus
-                            required
-                          />
-                          <button
-                            type="button"
-                            className="combo-custom-toggle-btn"
-                            onClick={() => updateFixedItem(fIdx, 'isCustom', false)}
-                            title="Switch back to select dropdown"
-                          >
-                            List
-                          </button>
-                        </div>
-                      ) : (
-                        <div style={{ position: 'relative', width: '100%' }}>
-                          <select
-                            className="form-select combo-item-select"
-                            value={fi.name || ''}
-                            onChange={(e) => {
-                              if (e.target.value === '__add_new__') {
-                                openAddItemModal(fIdx);
-                              } else if (e.target.value === '__manage__') {
-                                setShowManageItemsModal(true);
-                              } else {
-                                handleSelectItem(fIdx, e.target.value);
-                              }
-                            }}
-                            required
-                          >
-                            <option value="">-- Choose Item from Catalog --</option>
-
-                            {catalogCategories.length > 0 ? (
-                              catalogCategories.map(cat => {
-                                const catItems = dbItems.filter(it => it.category === cat);
-                                if (catItems.length === 0) return null;
-                                return (
-                                  <optgroup key={cat} label={cat}>
-                                    {catItems.map((it) => (
-                                      <option key={it._id || it.name} value={it.name}>
-                                        {it.name} (Count: {getItemDefaultQty(it)} nos)
-                                      </option>
-                                    ))}
-                                  </optgroup>
-                                );
-                              })
-                            ) : (
-                              dbItems.map((it) => (
-                                <option key={it._id || it.name} value={it.name}>
-                                  {it.name} (Count: {getItemDefaultQty(it)} nos)
-                                </option>
-                              ))
-                            )}
-
-                            {fi.name && !isKnown && (
-                              <optgroup label="Current Custom Item">
-                                <option value={fi.name}>{fi.name}</option>
-                              </optgroup>
-                            )}
-
-                            <optgroup label="⚙️ Custom & Dropdown Management">
-                              <option value="__custom__">✏️ Type Custom Item Name...</option>
-                              <option value="__add_new__">➕ Add New Item to Dropdown...</option>
-                              <option value="__manage__">⚙️ Manage & Delete Dropdown Items...</option>
-                            </optgroup>
-                          </select>
-
-                          {currentCat && (
-                            <span
-                              className={`combo-meal-badge ${currentCat.toLowerCase()}`}
+                    {/* Top Row: Item Selection, Quantity Stepper, Delete Button */}
+                    <div className="combo-builder-item-main-row">
+                      {/* Item Dropdown / Custom Name */}
+                      <div className="combo-item-name-wrap">
+                        {fi.isCustom ? (
+                          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', width: '100%' }}>
+                            <input
+                              type="text"
+                              className="form-input"
+                              placeholder="Type custom item name..."
+                              value={fi.name}
+                              onChange={(e) => updateFixedItem(fIdx, 'name', e.target.value)}
                               style={{
-                                position: 'absolute',
-                                right: '34px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                pointerEvents: 'none',
-                                fontSize: '0.66rem'
+                                height: '42px',
+                                fontSize: '0.88rem',
+                                fontWeight: 700,
+                                borderRadius: '10px',
+                                borderColor: '#E2D3C4',
+                                flex: 1
                               }}
+                              autoFocus
+                              required
+                            />
+                            <button
+                              type="button"
+                              className="combo-custom-toggle-btn"
+                              onClick={() => updateFixedItem(fIdx, 'isCustom', false)}
+                              title="Switch back to select dropdown"
                             >
-                              {currentCat}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                              List
+                            </button>
+                          </div>
+                        ) : (
+                          <div style={{ position: 'relative', width: '100%' }}>
+                            <select
+                              className="form-select combo-item-select"
+                              value={fi.name || ''}
+                              onChange={(e) => handleSelectItem(fIdx, e.target.value)}
+                              required
+                            >
+                              <option value="">-- Choose Item from Catalog --</option>
 
-                    {/* Quantity Stepper: [-] [qty] [+] nos */}
-                    <div className="combo-item-qty-wrap" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              {catalogCategories.length > 0 ? (
+                                catalogCategories.map(cat => {
+                                  const catItems = dbItems.filter(it => (it.category || 'General') === cat);
+                                  if (catItems.length === 0) return null;
+                                  return (
+                                    <optgroup key={cat} label={cat}>
+                                      {catItems.map((it) => (
+                                        <option key={it._id || it.name} value={it.name}>
+                                          {it.name} (Count: {getItemDefaultQty(it)} nos)
+                                        </option>
+                                      ))}
+                                    </optgroup>
+                                  );
+                                })
+                              ) : (
+                                dbItems.map((it) => (
+                                  <option key={it._id || it.name} value={it.name}>
+                                    {it.name} (Count: {getItemDefaultQty(it)} nos)
+                                  </option>
+                                ))
+                              )}
+
+                              {fi.name && !isKnown && (
+                                <optgroup label="Current Custom Item">
+                                  <option value={fi.name}>{fi.name}</option>
+                                </optgroup>
+                              )}
+                            </select>
+
+                            {currentCat && (
+                              <span
+                                className={`combo-meal-badge ${currentCat.toLowerCase()}`}
+                                style={{
+                                  position: 'absolute',
+                                  right: '34px',
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                  pointerEvents: 'none',
+                                  fontSize: '0.66rem'
+                                }}
+                              >
+                                {currentCat}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Quantity Stepper: [-] [qty] [+] nos */}
+                      <div className="combo-item-qty-wrap">
+                        <button
+                          type="button"
+                          className="combo-qty-btn"
+                          onClick={() => {
+                            const current = parseInt(fi.quantity, 10) || 1;
+                            updateFixedItem(fIdx, 'quantity', Math.max(1, current - 1));
+                          }}
+                          title="Decrease count"
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          min="1"
+                          className="combo-qty-input"
+                          value={fi.quantity}
+                          onChange={(e) => updateFixedItem(fIdx, 'quantity', Math.max(1, parseInt(e.target.value, 10) || 1))}
+                          title="Item count in nos (e.g. 3 for Dosa 3 nos)"
+                        />
+                        <button
+                          type="button"
+                          className="combo-qty-btn"
+                          onClick={() => {
+                            const current = parseInt(fi.quantity, 10) || 1;
+                            updateFixedItem(fIdx, 'quantity', current + 1);
+                          }}
+                          title="Increase count"
+                        >
+                          +
+                        </button>
+                        <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#8A7E74', marginLeft: '2px', paddingRight: '2px' }}>
+                          nos
+                        </span>
+                      </div>
+
+                      {/* Delete button */}
                       <button
                         type="button"
-                        className="combo-qty-btn"
-                        onClick={() => {
-                          const current = parseInt(fi.quantity, 10) || 1;
-                          updateFixedItem(fIdx, 'quantity', Math.max(1, current - 1));
-                        }}
-                        title="Decrease count"
+                        onClick={() => removeFixedItem(fIdx)}
+                        className="combo-item-delete-btn"
+                        title="Delete item from combo"
                       >
-                        -
+                        <Trash2 size={16} />
                       </button>
-                      <input
-                        type="number"
-                        min="1"
-                        className="combo-qty-input"
-                        value={fi.quantity}
-                        onChange={(e) => updateFixedItem(fIdx, 'quantity', Math.max(1, parseInt(e.target.value, 10) || 1))}
-                        title="Item count in nos (e.g. 3 for Dosa 3 nos)"
-                      />
-                      <button
-                        type="button"
-                        className="combo-qty-btn"
-                        onClick={() => {
-                          const current = parseInt(fi.quantity, 10) || 1;
-                          updateFixedItem(fIdx, 'quantity', current + 1);
-                        }}
-                        title="Increase count"
-                      >
-                        +
-                      </button>
-                      <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#8A7E74', marginLeft: '2px' }}>
-                        nos
-                      </span>
                     </div>
 
-                    {/* Notes / Special Instructions */}
+                    {/* Bottom Row: Prep Notes full width */}
                     <div className="combo-item-notes-wrap">
                       <input
                         type="text"
-                        className="form-input"
-                        placeholder="Prep notes (e.g. With coconut chutney & sambar)..."
+                        className="form-input combo-item-notes-input"
+                        placeholder="Prep notes (e.g. Served with chutney & sambar)..."
                         value={fi.notes || ''}
                         onChange={(e) => updateFixedItem(fIdx, 'notes', e.target.value)}
-                        style={{
-                          width: '100%',
-                          fontSize: '0.85rem',
-                          height: '42px',
-                          borderRadius: '10px',
-                          borderColor: '#E2D3C4'
-                        }}
                       />
                     </div>
-
-                    {/* Delete button */}
-                    <button
-                      type="button"
-                      onClick={() => removeFixedItem(fIdx)}
-                      className="combo-item-delete-btn"
-                      title="Delete item from combo"
-                    >
-                      <Trash2 size={16} />
-                    </button>
                   </div>
                 );
               })}
