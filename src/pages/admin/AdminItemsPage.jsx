@@ -263,6 +263,7 @@ export const AdminItemsPage = () => {
                   <tr>
                     <th>Item Name</th>
                     <th>Category</th>
+                    <th>Count (nos)</th>
                     <th>Used In Combos</th>
                     <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
@@ -298,6 +299,23 @@ export const AdminItemsPage = () => {
                         <td>
                           <span className="combo-cat-badge">
                             {item.category || 'General'}
+                          </span>
+                        </td>
+                        <td>
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            fontWeight: 700,
+                            color: '#C25E30',
+                            background: '#FDF5EE',
+                            padding: '3px 8px',
+                            borderRadius: '6px',
+                            fontSize: '0.8rem',
+                            border: '1px solid #F0D9C8'
+                          }}>
+                            <span>{item.defaultQty || 1}</span>
+                            <span style={{ fontSize: '0.72rem', color: '#8A7E74' }}>nos</span>
                           </span>
                         </td>
                         <td>

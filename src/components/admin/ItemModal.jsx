@@ -5,7 +5,8 @@ import { useToast } from '../../context/ToastContext';
 
 export const ItemModal = ({ isOpen, onClose, item, onSaved, existingCategories = [] }) => {
   const [name, setName] = useState('');
-  const [category, setCategory] = useState('Kitchen Essentials');
+  const [category, setCategory] = useState('Breakfast');
+  const [defaultQty, setDefaultQty] = useState(1);
   const [isVeg, setIsVeg] = useState(true);
   const [defaultNotes, setDefaultNotes] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,12 +16,14 @@ export const ItemModal = ({ isOpen, onClose, item, onSaved, existingCategories =
   useEffect(() => {
     if (item) {
       setName(item.name || '');
-      setCategory(item.category || 'Kitchen Essentials');
+      setCategory(item.category || 'Breakfast');
+      setDefaultQty(item.defaultQty || 1);
       setIsVeg(item.isVeg !== undefined ? item.isVeg : true);
       setDefaultNotes(item.defaultNotes || '');
     } else {
       setName('');
-      setCategory('Kitchen Essentials');
+      setCategory('Breakfast');
+      setDefaultQty(1);
       setIsVeg(true);
       setDefaultNotes('');
     }
@@ -37,7 +40,8 @@ export const ItemModal = ({ isOpen, onClose, item, onSaved, existingCategories =
       setLoading(true);
       const payload = {
         name: name.trim(),
-        category: category.trim() || 'Kitchen Essentials',
+        category: category.trim() || 'Breakfast',
+        defaultQty: Math.max(1, parseInt(defaultQty, 10) || 1),
         isVeg,
         defaultNotes: defaultNotes.trim()
       };
@@ -106,31 +110,54 @@ export const ItemModal = ({ isOpen, onClose, item, onSaved, existingCategories =
           />
         </div>
 
-        <div>
-          <label className="form-label">Item Category</label>
-          <input
-            type="text"
-            list="item-categories-list"
-            className="form-input"
-            placeholder="e.g. Breakfast, Lunch, Tea, Dinner..."
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          />
-          <datalist id="item-categories-list">
-            <option value="Breakfast" />
-            <option value="Lunch" />
-            <option value="Tea" />
-            <option value="Dinner" />
-            <option value="Kitchen Essentials" />
-            <option value="Meal Component" />
-            <option value="Bakery & Desserts" />
-            <option value="Hot Beverages" />
-            <option value="Cold Beverages" />
-            <option value="Sides & Appetizers" />
-            {existingCategories.map((c, i) => (
-              <option key={i} value={c} />
-            ))}
-          </datalist>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px' }}>
+          <div>
+            <label className="form-label">Item Category *</label>
+            <input
+              type="text"
+              list="item-categories-list"
+              className="form-input"
+              placeholder="e.g. Breakfast, Lunch, Tea, Dinner..."
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              required
+            />
+            <datalist id="item-categories-list">
+              <option value="Breakfast" />
+              <option value="Lunch" />
+              <option value="Tea" />
+              <option value="Dinner" />
+              <option value="Kitchen Essentials" />
+              <option value="Meal Component" />
+              <option value="Bakery & Desserts" />
+              <option value="Hot Beverages" />
+              <option value="Cold Beverages" />
+              <option value="Sides & Appetizers" />
+              {existingCategories.map((c, i) => (
+                <option key={i} value={c} />
+              ))}
+            </datalist>
+          </div>
+
+          <div>
+            <label className="form-label">Item Count (nos) *</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <input
+                type="number"
+                min="1"
+                className="form-input"
+                value={defaultQty}
+                onChange={(e) => setDefaultQty(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                placeholder="e.g. 3"
+                required
+                style={{ flex: 1 }}
+              />
+              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#6E5C50' }}>nos</span>
+            </div>
+            <span style={{ fontSize: '0.72rem', color: '#8A7E74', marginTop: '2px', display: 'block' }}>
+              e.g. Dosa 3 nos, Idli 3 nos
+            </span>
+          </div>
         </div>
 
         <div>

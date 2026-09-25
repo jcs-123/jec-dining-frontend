@@ -4,13 +4,7 @@ import { api } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { Plus, Trash2, Upload, Store, Database, Settings, Search, X } from 'lucide-react';
 
-const MEAL_CATEGORIES = [
-  { id: 'All', label: 'All Items', badgeClass: 'all' },
-  { id: 'Breakfast', label: 'Breakfast', badgeClass: 'breakfast' },
-  { id: 'Lunch', label: 'Lunch', badgeClass: 'lunch' },
-  { id: 'Tea', label: 'Tea & Snacks', badgeClass: 'tea' },
-  { id: 'Dinner', label: 'Dinner', badgeClass: 'dinner' }
-];
+
 
 const getItemCategory = (it) => {
   return it?.category || 'Breakfast';
@@ -36,15 +30,11 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
   // Available items in cafe catalog
   const [dbItems, setDbItems] = useState([]);
 
-  // Meal category filter tab in item builder
-  const [selectedMealFilter, setSelectedMealFilter] = useState('All');
-  const [manageCategoryFilter, setManageCategoryFilter] = useState('All');
-
   // Dropdown items management state
   const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [showManageItemsModal, setShowManageItemsModal] = useState(false);
   const [newItemName, setNewItemName] = useState('');
-  const [newItemCategory, setNewItemCategory] = useState('Breakfast');
+  const [newItemCategory, setNewItemCategory] = useState('');
   const [newItemQty, setNewItemQty] = useState(1);
   const [newItemNotes, setNewItemNotes] = useState('');
   const [savingNewItem, setSavingNewItem] = useState(false);
@@ -54,7 +44,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
 
   const openAddItemModal = (rowIdx = null) => {
     setActiveRowIdx(rowIdx);
-    setNewItemCategory(selectedMealFilter !== 'All' ? selectedMealFilter : 'Breakfast');
+    setNewItemCategory('');
     setNewItemName('');
     setNewItemQty(1);
     setNewItemNotes('');
@@ -89,7 +79,6 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
     setBasePriceRupees('');
     setFixedItems([]);
     setDisplayOrder(0);
-    setSelectedMealFilter('All');
     toast.info('Form cleared');
   };
 
@@ -113,7 +102,6 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
       setBasePriceRupees('');
       setFixedItems([]);
       setDisplayOrder(0);
-      setSelectedMealFilter('All');
     }
   }, [combo, categories, isOpen]);
 
@@ -182,7 +170,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
     updated[fIdx] = {
       ...updated[fIdx],
       name: selectedValue,
-      quantity: (updated[fIdx].quantity === 1 || !updated[fIdx].quantity) ? autoQty : updated[fIdx].quantity,
+      quantity: autoQty,
       isCustom: false,
       notes: updated[fIdx].notes || autoNotes
     };
@@ -271,6 +259,20 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
     }
   };
 
+  const handleClearAllCatalogItems = async () => {
+    if (!window.confirm('Delete ALL items from the catalog permanently? This cannot be undone.')) return;
+
+    try {
+      const res = await api.delete('/items/admin/all');
+      if (res.success) {
+        toast.success('All items removed from catalog');
+        setDbItems([]);
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to clear catalog');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -323,15 +325,13 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
     }
   };
 
-  const breakfastItems = dbItems.filter(it => getItemCategory(it) === 'Breakfast');
-  const lunchItems = dbItems.filter(it => getItemCategory(it) === 'Lunch');
-  const teaItems = dbItems.filter(it => getItemCategory(it) === 'Tea');
-  const dinnerItems = dbItems.filter(it => getItemCategory(it) === 'Dinner');
-  const otherItems = dbItems.filter(it => !['Breakfast', 'Lunch', 'Tea', 'Dinner'].includes(getItemCategory(it)));
-
-  const quickItems = selectedMealFilter === 'All'
-    ? dbItems.slice(0, 18)
-    : dbItems.filter(it => getItemCategory(it) === selectedMealFilter);
+  const catalogCategories = useMemo(() => {
+    const cats = new Set();
+    dbItems.forEach(it => {
+      if (it.category) cats.add(it.category);
+    });
+    return Array.from(cats);
+  }, [dbItems]);
 
   const modalTitle = combo
     ? `Edit Combo: ${combo.name}`
@@ -626,83 +626,18 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
             </div>
           </div>
 
-          {/* Meal Category Filter Pills (Separate Tags: Breakfast, Lunch, Tea, Dinner) */}
-          <div className="combo-meal-filter-bar">
-            <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#8C7B6E', textTransform: 'uppercase', letterSpacing: '0.04em', marginRight: '4px' }}>
-              Meal Tags:
-            </span>
-            {MEAL_CATEGORIES.map(cat => {
-              const count = cat.id === 'All'
-                ? dbItems.length
-                : dbItems.filter(it => getItemCategory(it) === cat.id).length;
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  className={`combo-meal-tag-pill ${selectedMealFilter === cat.id ? 'active' : ''}`}
-                  onClick={() => setSelectedMealFilter(cat.id)}
-                  title={cat.label}
-                >
-                  <span>{cat.label}</span>
-                  <span style={{ opacity: 0.75, fontSize: '0.72rem', fontWeight: 800 }}>
-                    ({count})
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Quick Select Preset Portion Chips (e.g. Dosa 3, Idli 3, Vada 2...) */}
-          {quickItems.length > 0 && (
-            <div className="combo-quick-add-section">
-              <div className="combo-quick-add-header">
-                <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <span>⚡ Quick Add to Combo</span>
-                  <span style={{ color: '#C25E30', fontWeight: 800 }}>
-                    ({selectedMealFilter === 'All' ? 'All Catalog Items' : `${selectedMealFilter} Selection`}):
-                  </span>
-                </span>
-                <span style={{ fontSize: '0.7rem', color: '#8C7B6E', fontWeight: 600, textTransform: 'none' }}>
-                  Click to add with pre-configured portions (e.g. Dosa 3, Idli 3)
-                </span>
-              </div>
-              <div className="combo-quick-add-chips">
-                {quickItems.map((it) => {
-                  const qty = getItemDefaultQty(it);
-                  const cat = getItemCategory(it);
-                  return (
-                    <button
-                      key={it._id || it.name}
-                      type="button"
-                      className="combo-quick-add-btn"
-                      onClick={() => addFixedItem(it.name, qty, it.defaultNotes)}
-                      title={`Click to add ${it.name} (${qty} portions) to combo`}
-                    >
-                      <Plus size={13} color="#C25E30" strokeWidth={2.5} />
-                      <span style={{ fontWeight: 700 }}>{it.name}</span>
-                      <span className="qty-tag">×{qty}</span>
-                      <span className={`combo-meal-badge ${cat.toLowerCase()}`} style={{ fontSize: '0.62rem', padding: '1px 5px' }}>
-                        {cat}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
           {/* Fixed Items List */}
           {fixedItems.length === 0 ? (
             <div style={{
               textAlign: 'center',
-              padding: '1.4rem',
+              padding: '1.6rem',
               background: '#FFFFFF',
               borderRadius: '12px',
               border: '1.5px dashed #E2D3C4',
               color: '#8A7E74',
-              fontSize: '0.86rem'
+              fontSize: '0.88rem'
             }}>
-              No items in this combo yet. Click any <strong>Quick Add chip above (e.g. Dosa ×3, Idli ×3)</strong> or click <strong>"Add Item"</strong> to choose from catalog.
+              No items in this combo yet. Click <strong>"Add Item"</strong> above to choose from your catalog.
             </div>
           ) : (
             <div className="combo-items-list">
@@ -760,56 +695,28 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
                             }}
                             required
                           >
-                            <option value="">-- Select Item (Grouped by Meal Tag) --</option>
+                            <option value="">-- Choose Item from Catalog --</option>
 
-                            {breakfastItems.length > 0 && (
-                              <optgroup label="Breakfast">
-                                {breakfastItems.map((it) => (
-                                  <option key={it._id || it.name} value={it.name}>
-                                    {it.name} {getItemDefaultQty(it) > 1 ? `(Portion: ${getItemDefaultQty(it)})` : ''}
-                                  </option>
-                                ))}
-                              </optgroup>
-                            )}
-
-                            {lunchItems.length > 0 && (
-                              <optgroup label="Lunch">
-                                {lunchItems.map((it) => (
-                                  <option key={it._id || it.name} value={it.name}>
-                                    {it.name} {getItemDefaultQty(it) > 1 ? `(Portion: ${getItemDefaultQty(it)})` : ''}
-                                  </option>
-                                ))}
-                              </optgroup>
-                            )}
-
-                            {teaItems.length > 0 && (
-                              <optgroup label="Tea & Snacks">
-                                {teaItems.map((it) => (
-                                  <option key={it._id || it.name} value={it.name}>
-                                    {it.name} {getItemDefaultQty(it) > 1 ? `(Portion: ${getItemDefaultQty(it)})` : ''}
-                                  </option>
-                                ))}
-                              </optgroup>
-                            )}
-
-                            {dinnerItems.length > 0 && (
-                              <optgroup label="Dinner">
-                                {dinnerItems.map((it) => (
-                                  <option key={it._id || it.name} value={it.name}>
-                                    {it.name} {getItemDefaultQty(it) > 1 ? `(Portion: ${getItemDefaultQty(it)})` : ''}
-                                  </option>
-                                ))}
-                              </optgroup>
-                            )}
-
-                            {otherItems.length > 0 && (
-                              <optgroup label="General Items">
-                                {otherItems.map((it) => (
-                                  <option key={it._id || it.name} value={it.name}>
-                                    {it.name}
-                                  </option>
-                                ))}
-                              </optgroup>
+                            {catalogCategories.length > 0 ? (
+                              catalogCategories.map(cat => {
+                                const catItems = dbItems.filter(it => it.category === cat);
+                                if (catItems.length === 0) return null;
+                                return (
+                                  <optgroup key={cat} label={cat}>
+                                    {catItems.map((it) => (
+                                      <option key={it._id || it.name} value={it.name}>
+                                        {it.name} (Count: {getItemDefaultQty(it)} nos)
+                                      </option>
+                                    ))}
+                                  </optgroup>
+                                );
+                              })
+                            ) : (
+                              dbItems.map((it) => (
+                                <option key={it._id || it.name} value={it.name}>
+                                  {it.name} (Count: {getItemDefaultQty(it)} nos)
+                                </option>
+                              ))
                             )}
 
                             {fi.name && !isKnown && (
@@ -844,8 +751,8 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
                       )}
                     </div>
 
-                    {/* Quantity Stepper: [-] [qty] [+] */}
-                    <div className="combo-item-qty-wrap">
+                    {/* Quantity Stepper: [-] [qty] [+] nos */}
+                    <div className="combo-item-qty-wrap" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <button
                         type="button"
                         className="combo-qty-btn"
@@ -853,7 +760,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
                           const current = parseInt(fi.quantity, 10) || 1;
                           updateFixedItem(fIdx, 'quantity', Math.max(1, current - 1));
                         }}
-                        title="Decrease portion quantity"
+                        title="Decrease count"
                       >
                         -
                       </button>
@@ -863,7 +770,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
                         className="combo-qty-input"
                         value={fi.quantity}
                         onChange={(e) => updateFixedItem(fIdx, 'quantity', Math.max(1, parseInt(e.target.value, 10) || 1))}
-                        title="Portion quantity (e.g. 3 for 3 dosas or 3 idlis)"
+                        title="Item count in nos (e.g. 3 for Dosa 3 nos)"
                       />
                       <button
                         type="button"
@@ -872,10 +779,13 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
                           const current = parseInt(fi.quantity, 10) || 1;
                           updateFixedItem(fIdx, 'quantity', current + 1);
                         }}
-                        title="Increase portion quantity"
+                        title="Increase count"
                       >
                         +
                       </button>
+                      <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#8A7E74', marginLeft: '2px' }}>
+                        nos
+                      </span>
                     </div>
 
                     {/* Notes / Special Instructions */}
@@ -965,53 +875,14 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
         }
       >
         <form onSubmit={handleAddNewItemToCatalog} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          {/* STEP 1: Select Meal Type Tag First */}
           <div>
             <label className="form-label" style={{ fontWeight: 800, color: '#2D1A10', marginBottom: '6px' }}>
-              1. Select Meal Tag *
-            </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
-              {[
-                { id: 'Breakfast', label: 'Breakfast', hint: 'Morning' },
-                { id: 'Lunch', label: 'Lunch', hint: 'Afternoon' },
-                { id: 'Tea', label: 'Tea & Snacks', hint: 'Evening' },
-                { id: 'Dinner', label: 'Dinner', hint: 'Night' }
-              ].map(m => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => setNewItemCategory(m.id)}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'flex-start',
-                    padding: '9px 12px',
-                    borderRadius: '10px',
-                    border: newItemCategory === m.id ? '2px solid #C25E30' : '1px solid #E2D3C4',
-                    background: newItemCategory === m.id ? '#FDF5EE' : '#FFFFFF',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  <span style={{ fontSize: '0.86rem', fontWeight: 700, color: newItemCategory === m.id ? '#C25E30' : '#2D1A10' }}>
-                    {m.label}
-                  </span>
-                  <span style={{ fontSize: '0.68rem', color: '#8A7E74' }}>{m.hint}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* STEP 2: Item Name inside Selected Tag */}
-          <div>
-            <label className="form-label" style={{ fontWeight: 800, color: '#2D1A10', marginBottom: '6px' }}>
-              2. Item Name inside {newItemCategory} *
+              Item Name *
             </label>
             <input
               type="text"
               className="form-input"
-              placeholder={`Enter item name for ${newItemCategory} (e.g. Chapathi, Dosa, Idli...)`}
+              placeholder="e.g. Dosa, Chapathi, Idli, Steamed Rice..."
               value={newItemName}
               onChange={(e) => setNewItemName(e.target.value)}
               autoFocus
@@ -1019,18 +890,49 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
             />
           </div>
 
-          {/* STEP 3: Portion / Qty */}
-          <div>
-            <label className="form-label">Default Portion / Qty</label>
-            <input
-              type="number"
-              min="1"
-              className="form-input"
-              value={newItemQty}
-              onChange={(e) => setNewItemQty(Math.max(1, parseInt(e.target.value, 10) || 1))}
-              placeholder="e.g. 1"
-              required
-            />
+          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px' }}>
+            <div>
+              <label className="form-label">Category</label>
+              <input
+                type="text"
+                list="combo-form-categories-list"
+                className="form-input"
+                placeholder="e.g. Breakfast, Lunch, Tea, Dinner..."
+                value={newItemCategory}
+                onChange={(e) => setNewItemCategory(e.target.value)}
+              />
+              <datalist id="combo-form-categories-list">
+                <option value="Breakfast" />
+                <option value="Lunch" />
+                <option value="Tea & Snacks" />
+                <option value="Dinner" />
+                {catalogCategories.map((c, i) => (
+                  <option key={i} value={c} />
+                ))}
+              </datalist>
+            </div>
+
+            <div>
+              <label className="form-label" style={{ fontWeight: 800, color: '#2D1A10', marginBottom: '6px' }}>
+                Item Count (nos) *
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input
+                  type="number"
+                  min="1"
+                  className="form-input"
+                  value={newItemQty}
+                  onChange={(e) => setNewItemQty(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                  placeholder="e.g. 3"
+                  required
+                  style={{ flex: 1 }}
+                />
+                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#6E5C50' }}>nos</span>
+              </div>
+              <span style={{ fontSize: '0.72rem', color: '#8A7E74', marginTop: '3px', display: 'block' }}>
+                e.g. Dosa 3 nos, Idli 3 nos, Chapathi 3 nos
+              </span>
+            </div>
           </div>
 
           {/* Optional Notes */}
@@ -1046,7 +948,7 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
           </div>
 
           <div style={{ fontSize: '0.78rem', color: '#7A6E63', background: '#FAF6EE', padding: '8px 12px', borderRadius: '8px', border: '1px solid #EADBCC' }}>
-            💡 This item will be saved strictly under <strong>{newItemCategory}</strong> with portion <strong>{newItemQty}</strong>.
+            💡 This item will be saved with count <strong>{newItemQty} nos</strong>{newItemCategory ? ` under ${newItemCategory}` : ''}.
           </div>
         </form>
       </Modal>
@@ -1058,14 +960,27 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
         title="Manage Dropdown Catalog Items"
         maxWidth="520px"
         footer={
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <span style={{ fontSize: '0.8rem', color: '#7A6E63' }}>
-              {dbItems.length} items in catalog
-            </span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: '8px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '0.8rem', color: '#7A6E63' }}>
+                {dbItems.length} items in catalog
+              </span>
+              {dbItems.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearAllCatalogItems}
+                  className="btn btn-outline btn-sm"
+                  style={{ color: '#DC2626', borderColor: '#FECACA', background: '#FEF2F2', fontSize: '0.72rem', padding: '2px 8px' }}
+                  title="Clear all catalog items"
+                >
+                  Clear All Items
+                </button>
+              )}
+            </div>
             <button
               type="button"
               className="btn btn-primary btn-sm"
-              onClick={() => { setShowManageItemsModal(false); setItemsSearchFilter(''); setManageCategoryFilter('All'); }}
+              onClick={() => { setShowManageItemsModal(false); setItemsSearchFilter(''); }}
               style={{ background: '#C25E30', borderColor: '#C25E30', fontWeight: 700 }}
             >
               Done
@@ -1074,21 +989,6 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
         }
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {/* Meal Tag Filter Pills in Manage Modal */}
-          <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-            {MEAL_CATEGORIES.map(cat => (
-              <button
-                key={cat.id}
-                type="button"
-                className={`combo-meal-tag-pill ${manageCategoryFilter === cat.id ? 'active' : ''}`}
-                style={{ fontSize: '0.72rem', padding: '4px 10px' }}
-                onClick={() => setManageCategoryFilter(cat.id)}
-              >
-                <span>{cat.label}</span>
-              </button>
-            ))}
-          </div>
-
           {/* Quick search input */}
           <div style={{ position: 'relative' }}>
             <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9E8E82' }} />
@@ -1114,7 +1014,6 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
           {/* List of items with meal badges & delete button */}
           <div style={{ maxHeight: '340px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '4px' }}>
             {dbItems
-              .filter(it => manageCategoryFilter === 'All' || getItemCategory(it) === manageCategoryFilter)
               .filter(it => it.name.toLowerCase().includes(itemsSearchFilter.toLowerCase()))
               .map((it) => {
                 const cat = getItemCategory(it);
@@ -1150,11 +1049,9 @@ export const ComboFormModal = ({ isOpen, onClose, combo, categories, onSaved, ca
                       <span className={`combo-meal-badge ${cat.toLowerCase()}`}>
                         {cat}
                       </span>
-                      {qty > 1 && (
-                        <span style={{ fontSize: '0.72rem', background: '#F0E5D8', color: '#C25E30', padding: '1px 6px', borderRadius: '4px', fontWeight: 700 }}>
-                          ×{qty}
-                        </span>
-                      )}
+                      <span style={{ fontSize: '0.74rem', background: '#F0E5D8', color: '#C25E30', padding: '1px 7px', borderRadius: '4px', fontWeight: 700 }}>
+                        {qty} nos
+                      </span>
                     </div>
 
                     <button
